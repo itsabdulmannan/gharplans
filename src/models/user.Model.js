@@ -21,7 +21,7 @@ const User = sequelize.define('user', {
         allowNull: false
     },
     role: {
-        type: DataTypes.BOOLEAN,
+        type: DataTypes.STRING,
         allowNull: false
     },
     contactNo: {
@@ -40,6 +40,13 @@ const User = sequelize.define('user', {
         type: DataTypes.STRING,
         allowNull: false
     },
+    isVerified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+    otp: {
+        type: DataTypes.STRING
+    }
 }, {
     timestamps: true,
     tableName: 'users',
