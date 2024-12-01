@@ -1,4 +1,4 @@
-const User = require("../models/users.model");
+const User = require("../models/user.Model");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
@@ -14,11 +14,10 @@ const authenticate = async function (req, res, next) {
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
-
     req.user = user;
     next();
   } catch (error) {
-    console.error("Authentication error:", error); 
+    console.error("Authentication error:", error);
     if (error instanceof jwt.JsonWebTokenError) {
       return res.status(401).json({ message: "Invalid token" });
     }
@@ -26,14 +25,15 @@ const authenticate = async function (req, res, next) {
   }
 };
 
-const authorize = function (roleName) {
+const authorize = function (...roleNames) {
   return function (req, res, next) {
-    if (req.user && req.user.userRole === roleName) {
+    if (req.user && roleNames.includes(req.user.role)) {
       return next();
     }
     return res.status(401).json({ message: "user is not authorized" });
   };
 };
+
 
 module.exports = {
   authenticate,

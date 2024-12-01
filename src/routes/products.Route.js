@@ -1,117 +1,89 @@
 const productController = require('../controllers/products.Controller');
 const prodcustRoute = require('express').Router();
+const { authenticate, authorize } = require('../middleware/auth');
 
 /**
  * @swagger
- * /products:
+ * /product:
  *   get:
- *     summary: Retrieve a list of all products
- *     description: Fetch all the products available in the store.
- *     tags:
- *       - Products
- *     responses:
- *       200:
- *         description: A list of products.
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                     example: 1
- *                   name:
- *                     type: string
- *                     example: "Smartphone"
- *                   description:
- *                     type: string
- *                     example: "Latest model with advanced features."
- *                   price:
- *                     type: number
- *                     format: float
- *                     example: 699.99
- *                   image:
- *                     type: string
- *                     example: "/images/smartphone.png"
- *                   createdAt:
- *                     type: string
- *                     format: date-time
- *                     example: "2024-11-28T18:38:56.541Z"
- *                   updatedAt:
- *                     type: string
- *                     format: date-time
- *                     example: "2024-11-28T18:38:56.541Z"
- *       500:
- *         description: Internal Server Error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Internal Server Error"
- */
-
-prodcustRoute.get('/products', productController.getAllProducts);
-
-/**
- * @swagger
- * /products/{id}:
- *   get:
- *     summary: Retrieve a product by its ID
- *     description: Fetch a product's details using its unique ID.
+ *     summary: Retrieve a product or a list of products
+ *     description: Fetch all the products available in the store or a specific product by its ID if the 'id' query parameter is provided.
  *     tags:
  *       - Products
  *     parameters:
- *       - in: path
+ *       - in: query
  *         name: id
- *         required: true
- *         description: The ID of the product to retrieve.
+ *         required: false
+ *         description: The ID of the product to retrieve. If not provided, fetches all products.
  *         schema:
  *           type: integer
  *           example: 1
  *     responses:
  *       200:
- *         description: A single product's details.
+ *         description: A product or a list of products.
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 id:
- *                   type: integer
- *                   example: 1
- *                 name:
- *                   type: string
- *                   example: "Smartphone"
- *                 description:
- *                   type: string
- *                   example: "Latest model with advanced features."
- *                 price:
- *                   type: number
- *                   format: float
- *                   example: 699.99
- *                 image:
- *                   type: string
- *                   example: "/images/smartphone.png"
- *                 createdAt:
- *                   type: string
- *                   format: date-time
- *                   example: "2024-11-28T18:38:56.541Z"
- *                 updatedAt:
- *                   type: string
- *                   format: date-time
- *                   example: "2024-11-28T18:38:56.541Z"
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 product:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     categoryId:
+ *                       type: integer
+ *                       example: 2
+ *                     name:
+ *                       type: string
+ *                       example: "Smartphone"
+ *                     price:
+ *                       type: number
+ *                       format: float
+ *                       example: 699.99
+ *                     image:
+ *                       type: string
+ *                       example: "/images/smartphone.png"
+ *                     description:
+ *                       type: string
+ *                       example: "Latest model with advanced features."
+ *                     shortDescription:
+ *                       type: string
+ *                       example: "Advanced smartphone with amazing features."
+ *                     addiotionalInformation:
+ *                       type: string
+ *                       example: "Includes a free case and screen protector."
+ *                     status:
+ *                       type: boolean
+ *                       example: true
+ *                     options:
+ *                       type: object
+ *                       example: { "color": "black", "memory": "64GB" }
+ *                     color:
+ *                       type: string
+ *                       example: "black"
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2024-11-28T18:38:56.541Z"
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2024-11-28T18:38:56.541Z"
  *       404:
- *         description: Product not found
+ *         description: Product not found.
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
  *                 error:
  *                   type: string
  *                   example: "Product not found"
@@ -127,11 +99,11 @@ prodcustRoute.get('/products', productController.getAllProducts);
  *                   example: "Internal Server Error"
  */
 
-prodcustRoute.get('/products/:id', productController.getProductById);
+prodcustRoute.get('/', productController.getProducts);
 
 /**
  * @swagger
- * /products:
+ * /product:
  *   post:
  *     summary: Create a new product
  *     description: Add a new product to the store.
@@ -144,6 +116,10 @@ prodcustRoute.get('/products/:id', productController.getProductById);
  *           schema:
  *             type: object
  *             properties:
+ *               categoryId:
+ *                 type: integer
+ *                 description: The category ID of the product.
+ *                 example: 2
  *               name:
  *                 type: string
  *                 description: The name of the product.
@@ -161,6 +137,26 @@ prodcustRoute.get('/products/:id', productController.getProductById);
  *                 type: string
  *                 description: URL of the product image.
  *                 example: "/images/smartphone.png"
+ *               shortDescription:
+ *                 type: string
+ *                 description: A short description of the product.
+ *                 example: "Advanced smartphone with amazing features."
+ *               addiotionalInformation:
+ *                 type: string
+ *                 description: Additional information about the product.
+ *                 example: "Includes a free case and screen protector."
+ *               status:
+ *                 type: boolean
+ *                 description: Whether the product is active or not.
+ *                 example: true
+ *               options:
+ *                 type: object
+ *                 description: Optional attributes like color, size, etc.
+ *                 example: { "color": "black", "memory": "64GB" }
+ *               color:
+ *                 type: object
+ *                 description: Available color options for the product.
+ *                 example: { "primary": "black", "secondary": "white" }
  *     responses:
  *       201:
  *         description: Product created successfully.
@@ -172,6 +168,9 @@ prodcustRoute.get('/products/:id', productController.getProductById);
  *                 id:
  *                   type: integer
  *                   example: 1
+ *                 categoryId:
+ *                   type: integer
+ *                   example: 2
  *                 name:
  *                   type: string
  *                   example: "Smartphone"
@@ -185,6 +184,21 @@ prodcustRoute.get('/products/:id', productController.getProductById);
  *                 image:
  *                   type: string
  *                   example: "/images/smartphone.png"
+ *                 shortDescription:
+ *                   type: string
+ *                   example: "Advanced smartphone with amazing features."
+ *                 addiotionalInformation:
+ *                   type: string
+ *                   example: "Includes a free case and screen protector."
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 options:
+ *                   type: object
+ *                   example: { "color": "black", "memory": "64GB" }
+ *                 color:
+ *                   type: object
+ *                   example: { "primary": "black", "secondary": "white" }
  *                 createdAt:
  *                   type: string
  *                   format: date-time
@@ -205,11 +219,11 @@ prodcustRoute.get('/products/:id', productController.getProductById);
  *                   example: "Internal Server Error"
  */
 
-prodcustRoute.post('/products', productController.createProduct);
+prodcustRoute.post('/', authenticate, authorize('admin'), productController.createProduct);
 
 /**
  * @swagger
- * /products/{id}:
+ * /product/{id}:
  *   put:
  *     summary: Update an existing product
  *     description: Update a product's details by its ID.
@@ -230,6 +244,10 @@ prodcustRoute.post('/products', productController.createProduct);
  *           schema:
  *             type: object
  *             properties:
+ *               categoryId:
+ *                 type: integer
+ *                 description: The category ID of the product.
+ *                 example: 2
  *               name:
  *                 type: string
  *                 description: The name of the product.
@@ -247,6 +265,26 @@ prodcustRoute.post('/products', productController.createProduct);
  *                 type: string
  *                 description: URL of the product image.
  *                 example: "/images/smartphone.png"
+ *               shortDescription:
+ *                 type: string
+ *                 description: A short description of the product.
+ *                 example: "Advanced smartphone with amazing features."
+ *               addiotionalInformation:
+ *                 type: string
+ *                 description: Additional information about the product.
+ *                 example: "Includes a free case and screen protector."
+ *               status:
+ *                 type: boolean
+ *                 description: Whether the product is active or not.
+ *                 example: true
+ *               options:
+ *                 type: object
+ *                 description: Optional attributes like color, size, etc.
+ *                 example: { "color": "black", "memory": "64GB" }
+ *               color:
+ *                 type: string
+ *                 description: The color of the product.
+ *                 example: "black"
  *     responses:
  *       200:
  *         description: Product updated successfully.
@@ -258,6 +296,9 @@ prodcustRoute.post('/products', productController.createProduct);
  *                 id:
  *                   type: integer
  *                   example: 1
+ *                 categoryId:
+ *                   type: integer
+ *                   example: 2
  *                 name:
  *                   type: string
  *                   example: "Smartphone"
@@ -271,6 +312,21 @@ prodcustRoute.post('/products', productController.createProduct);
  *                 image:
  *                   type: string
  *                   example: "/images/smartphone.png"
+ *                 shortDescription:
+ *                   type: string
+ *                   example: "Advanced smartphone with amazing features."
+ *                 addiotionalInformation:
+ *                   type: string
+ *                   example: "Includes a free case and screen protector."
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 options:
+ *                   type: object
+ *                   example: { "color": "black", "memory": "64GB" }
+ *                 color:
+ *                   type: string
+ *                   example: "black"
  *                 createdAt:
  *                   type: string
  *                   format: date-time
@@ -301,11 +357,11 @@ prodcustRoute.post('/products', productController.createProduct);
  *                   example: "Internal Server Error"
  */
 
-prodcustRoute.put('/products/:id', productController.updateProduct);
+prodcustRoute.put('/:id', authenticate, authorize('admin'), productController.updateProduct);
 
 /**
  * @swagger
- * /products/{id}:
+ * /product/{id}:
  *   delete:
  *     summary: Delete a product by ID
  *     description: Remove a product from the store by its unique ID.
@@ -352,6 +408,6 @@ prodcustRoute.put('/products/:id', productController.updateProduct);
  *                   example: "Internal Server Error"
  */
 
-prodcustRoute.delete('/products/:id', productController.deleteProduct);
+prodcustRoute.delete('/:id', authenticate, authorize('admin'), productController.deleteProduct);
 
 module.exports = prodcustRoute;

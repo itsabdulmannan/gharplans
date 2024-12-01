@@ -1,7 +1,7 @@
 const Category = require('../models/category.Model');
 
 const categoryController = {
-    addCategpry: async (req, res) => {
+    addCategory: async (req, res) => {
         try {
             const { name, description, image, status } = req.body;
             const category = await Category.create({ name, description, image, status });
@@ -11,32 +11,30 @@ const categoryController = {
             res.status(500).json({ status: false, error: "Internal Server Error" });
         }
     },
-    getCategory: async (req, res) => {
-        try {
-            const data = await Category.findAll();
-            const categories = data.map(category => ({
-                ...category.dataValues,
-                image: `${req.protocol}://${req.get('host')}${category.image}`
-            }));
-            res.status(200).json({ status: true, categories });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ status: false, error: "Internal Server Error" });
-        }
-    },
     getCategoryById: async (req, res) => {
         try {
-            const id = req.params.id;
-            const data = await Category.findByPk(id);
-            if (!data) {
-                res.status(404).json({ status: false, error: "Category not found" });
+            const { id } = req.query;
+
+            if (id) {
+                const data = await Category.findByPk(id);
+                if (!data) {
+                    return res.status(404).json({ status: false, error: "Category not found" });
+                }
+                const category = data.dataValues;
+                category.image = `${req.protocol}://${req.get('host')}${category.image}`;
+                return res.status(200).json({ status: true, category });
+            } else {
+                const categories = await Category.findAll();
+                const categoriesData = categories.map(category => {
+                    const categoryData = category.dataValues;
+                    categoryData.image = `${req.protocol}://${req.get('host')}${categoryData.image}`;
+                    return categoryData;
+                });
+                return res.status(200).json({ status: true, categories: categoriesData });
             }
-            const category = data.dataValues;
-            category.image = `${req.protocol}://${req.get('host')}${category.image}`;
-            res.status(200).json({ status: true, category });
         } catch (error) {
             console.error(error);
-            res.status(500).json({ status: false, error: "Internal Server Error" });
+            return res.status(500).json({ status: false, error: "Internal Server Error" });
         }
     },
     updateCategory: async (req, res) => {

@@ -1,17 +1,87 @@
 const User = require('../models/user.Model');
 const bcrypt = require('bcrypt');
+const { sendMail, transporter } = require('../config/mailer');
 const jwt = require('jsonwebtoken');
+const sequelize = require('../config/database');
 
+const generateOTP = () => {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+};
 const userController = {
+
     registerUser: async (req, res) => {
+        const { name, email, password, contactNo, address, city, profileImage } = req.body;
+
+        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+        if (!email || !emailRegex.test(email)) {
+            return res.status(400).json({ message: 'Invalid email format.' });
+        }
+
+        if (!contactNo || contactNo.length < 7 || contactNo.length > 15) {
+            return res.status(400).json({ message: 'Invalid contact number format. It should be 7 to 15 digits long.' });
+        }
+
+        if (!password) {
+            return res.status(400).json({ message: 'Password is required.' });
+        }
+
+        const transaction = await sequelize.transaction();
+
         try {
-            const { name, email, password, role, contactNo, address, city, profileImage } = req.body;
-            console.log(req.body);
-            const hashedPassword = await bcrypt.hash(password, 10);
-            const user = await User.create({ name, email, password: hashedPassword, role, contactNo, address, city, profileImage });
-            res.status(201).json(user);
+            const userExists = await User.findOne({ where: { email }, transaction });
+            if (userExists) {
+                return res.status(409).json({ message: 'User with this email already exists.' });
+            }
+
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password, salt);
+
+            const newUser = {
+                name,
+                email,
+                password: hashedPassword,
+                role: 'User',
+                contactNo,
+                address,
+                city,
+                profileImage
+            };
+
+            const createdUser = await User.create(newUser, { transaction });
+
+            const otp = generateOTP();
+            await User.update({ otp }, { where: { id: createdUser.id }, transaction });
+
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: 'Verify your email',
+                text: `Your OTP is: ${otp}`
+            };
+
+            await sendMail(mailOptions);
+
+            await transaction.commit();
+
+            res.status(201).json({
+                status: true,
+                message: 'User registered successfully',
+                createdUser: {
+                    id: createdUser.id,
+                    name: createdUser.name,
+                    email: createdUser.email,
+                    contactNo: createdUser.contactNo,
+                    address: createdUser.address,
+                    city: createdUser.city,
+                    profileImage: createdUser.profileImage,
+                    role: createdUser.role
+                },
+                otp
+            });
         } catch (error) {
-            res.status(400).json({ error: error.message });
+            console.error('Error registering user:', error);
+            await transaction.rollback();
+            res.status(500).json({ status: false, error: 'Internal Server Error' });
         }
     },
     loginUser: async (req, res) => {
@@ -21,11 +91,14 @@ const userController = {
             if (!user) {
                 return res.status(401).json({ error: 'User not found' });
             }
+            if (!user.isVerified) {
+                return res.status(403).json({ error: 'User is not verified. Please verify your account before logging in.' });
+            }
             const passwordMatch = await bcrypt.compare(password, user.password);
             if (!passwordMatch) {
                 return res.status(401).json({ error: 'Invalid password' });
             }
-            const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
+            const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
             res.status(200).json({ user, token });
         } catch (error) {
             res.status(500).json({ error: error.message });
@@ -101,7 +174,7 @@ const userController = {
                 return res.status(404).json({ error: "User not found" });
             }
 
-            if (user.otp === otp && user.otpExpires > Date.now()) {
+            if (user.otp === otp) {
                 const resetToken = jwt.sign({ email }, process.env.JWT_SECRET_KEY, { expiresIn: '15m' });
                 return res.status(200).json({ status: true, message: "OTP verified for reset.", resetToken });
             } else {
@@ -134,7 +207,9 @@ const userController = {
     updatePassword: async (req, res) => {
         try {
             const token = req.header('Authorization').replace('Bearer ', '');
+            console.log("Token from swagger", token)
             const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+            console.log(decoded.email, "decoded email")
             const user = await User.findOne({ where: { email: decoded.email } });
             if (!user) {
                 return res.status(404).json({ error: "User not found" });

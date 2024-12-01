@@ -26,19 +26,19 @@ const User = sequelize.define('user', {
     },
     contactNo: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     address: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     city: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     profileImage: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     isVerified: {
         type: DataTypes.BOOLEAN,

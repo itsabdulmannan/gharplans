@@ -14,9 +14,23 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: "http://localhost:3005"
-            }
-        ]
+                url: "http://localhost:3005",
+            },
+        ],
+        components: {
+            securitySchemes: {
+                BearerAuth: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT",
+                },
+            },
+        },
+        security: [
+            {
+                BearerAuth: [],
+            },
+        ],
     },
     apis: [path.join(__dirname, '/../routes/*.js')],
 };

@@ -1,5 +1,6 @@
 const userRouter = require('express').Router();
 const userController = require('../controllers/user.Controller');
+const { authenticate } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -19,7 +20,7 @@ const userController = require('../controllers/user.Controller');
  * /user/register:
  *   post:
  *     summary: Register a new user
- *     description: This endpoint registers a new user into the system with name, email, password, and additional user details.
+ *     description: This endpoint registers a new user into the system with name, email, password, contact number, address, and profile image.
  *     tags: [User]
  *     requestBody:
  *       required: true
@@ -37,19 +38,13 @@ const userController = require('../controllers/user.Controller');
  *               password:
  *                 type: string
  *                 example: securepassword123
- *               role:
- *                 type: string
- *                 example: user
  *               contactNo:
  *                 type: string
  *                 example: '+1234567890'
  *               address:
  *                 type: string
  *                 example: 123 Street Name, City
- *               city:
- *                 type: string
- *                 example: New York
- *               image:
+ *               profileImage:
  *                 type: string
  *                 example: "profile-pic.jpg"
  *     responses:
@@ -69,19 +64,13 @@ const userController = require('../controllers/user.Controller');
  *                 email:
  *                   type: string
  *                   example: john.doe@example.com
- *                 role:
- *                   type: string
- *                   example: user
  *                 contactNo:
  *                   type: string
  *                   example: '+1234567890'
  *                 address:
  *                   type: string
  *                   example: 123 Street Name, City
- *                 city:
- *                   type: string
- *                   example: New York
- *                 image:
+ *                 profileImage:
  *                   type: string
  *                   example: "profile-pic.jpg"
  *       400:
@@ -114,10 +103,10 @@ userRouter.post('/register', userController.registerUser);
  *             properties:
  *               email:
  *                 type: string
- *                 example: john.doe@example.com
+ *                 example: admin@gharplans.com
  *               password:
  *                 type: string
- *                 example: securepassword123
+ *                 example: admin123
  *     responses:
  *       200:
  *         description: Login successful
@@ -276,8 +265,6 @@ userRouter.post('/verify-reset-otp', userController.verifyResetOtp);
  *     summary: Reset user password
  *     description: Allows the user to reset their password using a valid reset token.
  *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -305,7 +292,7 @@ userRouter.post('/verify-reset-otp', userController.verifyResetOtp);
  *       401:
  *         description: Invalid or expired token
  */
-userRouter.post('/reset-password', userController.resetPassword);
+userRouter.post('/reset-password', authenticate, userController.resetPassword);
 
 /**
  * @swagger
@@ -314,8 +301,6 @@ userRouter.post('/reset-password', userController.resetPassword);
  *     summary: Update user password
  *     description: Allows the user to update their password with the current password and new password.
  *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:

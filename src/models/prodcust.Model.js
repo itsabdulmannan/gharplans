@@ -40,12 +40,12 @@ const Products = sequelize.define('products', {
         allowNull: false,
         defaultValue: true
     },
-    optoins: {
+    options: {
         type: DataTypes.JSON,
         allowNull: true
     },
     color: {
-        type: DataTypes.STRING,
+        type: DataTypes.JSON,
         allowNull: true
     }
 }, {

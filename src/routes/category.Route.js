@@ -1,5 +1,6 @@
 const categoryController = require('../controllers/category.Controller');
 const categoryRoute = require('express').Router();
+const { authenticate, authorize } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -78,90 +79,27 @@ const categoryRoute = require('express').Router();
  *                   type: string
  *                   example: "Internal Server Error"
  */
-categoryRoute.post('/', categoryController.addCategpry);
-
-/**
- * @swagger
- * /category:
- *   get:
- *     summary: Retrieve all categories
- *     description: Fetches a list of all categories from the database.
- *     tags:
- *       - Category
- *     responses:
- *       200:
- *         description: A list of categories
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: boolean
- *                   example: true
- *                 categories:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: integer
- *                         example: 1
- *                       name:
- *                         type: string
- *                         example: "Electronics"
- *                       description:
- *                         type: string
- *                         example: "Gadgets and devices"
- *                       image:
- *                         type: string
- *                         example: "/images/1732819064781-Screenshot 2024-05-18 142049.png"
- *                       status:
- *                         type: string
- *                         example: "active"
- *                       createdAt:
- *                         type: string
- *                         format: date-time
- *                         example: "2024-11-28T18:37:57.304Z"
- *                       updatedAt:
- *                         type: string
- *                         format: date-time
- *                         example: "2024-11-28T18:37:57.304Z"
- *       500:
- *         description: Internal Server Error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: boolean
- *                   example: false
- *                 error:
- *                   type: string
- *                   example: "Internal Server Error"
- */
-categoryRoute.get('/', categoryController.getCategory);
+categoryRoute.post('/', authenticate, authorize('admin'), categoryController.addCategory);
 
 /**
  * @swagger
  * /category/{id}:
  *   get:
- *     summary: Retrieve a category by ID
- *     description: Fetch a category by its unique ID.
+ *     summary: Retrieve a category by ID O
+ *     description: Fetch a category by its unique ID. If no ID is provided, fetches all categories.
  *     tags:
  *       - Category
  *     parameters:
- *       - in: path
+ *       - in: query
  *         name: id
- *         required: true
+ *         required: false
  *         description: The ID of the category to retrieve.
  *         schema:
  *           type: integer
  *           example: 1
  *     responses:
  *       200:
- *         description: A single category's details.
+ *         description: A single category's details or a list of all categories.
  *         content:
  *           application/json:
  *             schema:
@@ -223,6 +161,7 @@ categoryRoute.get('/', categoryController.getCategory);
  *                   type: string
  *                   example: "Internal Server Error"
  */
+
 categoryRoute.get('/:id', categoryController.getCategoryById);
 
 /**
@@ -305,7 +244,7 @@ categoryRoute.get('/:id', categoryController.getCategoryById);
  *                   type: string
  *                   example: "Internal Server Error"
  */
-categoryRoute.put('/:id', categoryController.updateCategory);
+categoryRoute.put('/:id', authenticate, authorize('admin'), categoryController.updateCategory);
 
 /**
  * @swagger
@@ -364,6 +303,6 @@ categoryRoute.put('/:id', categoryController.updateCategory);
  *                   type: string
  *                   example: "Internal Server Error"
  */
-categoryRoute.delete('/:id', categoryController.deleteCategory);
+categoryRoute.delete('/:id', authenticate, authorize('admin'), categoryController.deleteCategory);
 
 module.exports = categoryRoute;
