@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const upload = require('../middleware/multer'); // Import multer configuration
-const uploadImage = require('../controllers/image.Controller'); // Import controller function
+const upload = require('../middleware/multer');
+const uploadImage = require('../controllers/image.Controller');
+const { authenticate, authorize } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -38,6 +39,6 @@ const uploadImage = require('../controllers/image.Controller'); // Import contro
  *       400:
  *         description: Invalid file type or size
  */
-router.post('/upload-image', upload.single('image'), uploadImage);
+router.post('/upload-image', upload.single('image'), authenticate, authorize('admin'), uploadImage);
 
 module.exports = router;
