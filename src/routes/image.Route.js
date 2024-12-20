@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/multer');
-const uploadImage = require('../controllers/image.Controller');
+const handleImage = require('../controllers/image.Controller');
 const { authenticate, authorize } = require('../middleware/auth');
 
 /**
@@ -39,6 +39,50 @@ const { authenticate, authorize } = require('../middleware/auth');
  *       400:
  *         description: Invalid file type or size
  */
-router.post('/upload-image', upload.single('image'), authenticate, authorize('admin'), uploadImage);
+router.post('/upload-image', upload.single('image'), authenticate, authorize('admin'), handleImage.uploadImage);
+
+/**
+ * @swagger
+ * /image/get-full-image-url:
+ *   get:
+ *     summary: Generate full image URL
+ *     description: This endpoint returns the full URL of an image when provided with the image path.
+ *     tags: [Images]
+ *     parameters:
+ *       - in: query
+ *         name: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The relative path of the image (e.g., /images/filename.jpg)
+ *     responses:
+ *       200:
+ *         description: Full image URL generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 fullUrl:
+ *                   type: string
+ *                   example: http://localhost:3000/images/1681222234-profile.jpg
+ *       400:
+ *         description: Path parameter is missing
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Path is required
+ */
+router.get('/get-full-image-url', handleImage.getFullimageUrl);
 
 module.exports = router;
