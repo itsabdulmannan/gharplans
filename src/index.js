@@ -11,7 +11,7 @@ setupSwaggger(app);
 require('./models/associations.Model');
 
 // Middleware for serving static files
-app.use('/images', express.static(path.join(__dirname, 'public/images')));
+app.use('/images', express.static(path.join(__dirname, '../public/images')));
 
 // Middleware for parsing incoming request data
 app.use(express.json());
