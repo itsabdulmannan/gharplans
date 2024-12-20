@@ -1,8 +1,9 @@
-const Products = require('../models/prodcust.Model');
+const Products = require('../models/product.Model');
 const Category = require('../models/category.Model');
-const { Op } = require('sequelize');
+const { Op, where } = require('sequelize');
 const Review = require('../models/review.Model');
 const sequelize = require('../config/database');
+const discountedProducts = require('../models/discountedProducts.Model')
 
 const productController = {
     getProducts: async (req, res) => {
@@ -22,9 +23,8 @@ const productController = {
                     return res.status(404).json({ error: "Product not found" });
                 }
 
-                // Calculate the average rating for the product
                 const reviews = await Review.findAll({
-                    where: { productId: id, status: 'approved' }, // Only approved reviews
+                    where: { productId: id, status: 'approved' },
                     attributes: [[sequelize.fn('avg', sequelize.col('rating')), 'averageRating']],
                 });
 
@@ -32,6 +32,12 @@ const productController = {
 
                 const host = req.protocol + '://' + req.get('host');
                 const productJson = product.toJSON();
+
+                const productPrice = parseFloat(productJson.price);
+                if (isNaN(productPrice)) {
+                    return res.status(400).json({ error: "Invalid product price" });
+                }
+
                 const result = {
                     ...productJson,
                     category: {
@@ -39,8 +45,38 @@ const productController = {
                         name: product.category.name,
                     },
                     image: host + productJson.image,
-                    rating: averageRating, // Add the calculated average rating
+                    rating: averageRating,
+                    discountTiers: []
                 };
+
+                if (product.hasDiscount) {
+                    const discountTiers = await discountedProducts.findAll({
+                        where: { productId: id },
+                    });
+
+                    if (discountTiers.length === 0) {
+                        result.discountTiers.push({
+                            range: "No discount tiers available",
+                            discountedPrice: productPrice.toFixed(2),
+                        });
+                    } else {
+                        for (let tier of discountTiers) {
+                            const { startRange, endRange, discount } = tier;
+                            // Calculate the discounted price based on the discount percentage
+                            const discountedPrice = productPrice * (1 - discount / 100);
+
+                            result.discountTiers.push({
+                                range: `${startRange}-${endRange}`,
+                                discountedPrice: discountedPrice.toFixed(2),
+                            });
+                        }
+                    }
+                } else {
+                    result.discountTiers.push({
+                        range: "No discount",
+                        discountedPrice: productPrice.toFixed(2),
+                    });
+                }
 
                 delete result.categoryId;
                 delete result.createdAt;
@@ -50,6 +86,11 @@ const productController = {
             }
 
             const products = await Products.findAll({
+                where: {},
+                order: [
+                    ['homeScreen', 'DESC'],
+                    ['createdAt', 'DESC'],
+                ],
                 include: {
                     model: Category,
                     attributes: ['id', 'name'],
@@ -61,30 +102,66 @@ const productController = {
             const result = await Promise.all(products.map(async (product) => {
                 const productJson = product.toJSON();
 
-                // Calculate the average rating for each product
+                const productPrice = parseFloat(productJson.price);
+                if (isNaN(productPrice)) {
+                    return {
+                        error: "Invalid product price",
+                        productId: product.id
+                    };
+                }
+
                 const reviews = await Review.findAll({
-                    where: { productId: product.id, status: 'approved' }, // Only approved reviews
+                    where: { productId: product.id, status: 'approved' },
                     attributes: [[sequelize.fn('avg', sequelize.col('rating')), 'averageRating']],
                 });
 
                 const averageRating = reviews.length > 0 ? reviews[0].get('averageRating') : 0;
 
-                return {
+                const productResult = {
                     ...productJson,
                     category: {
                         categoryId: product.category.id,
                         name: product.category.name,
                     },
                     image: host + productJson.image,
-                    rating: averageRating, // Add the calculated average rating
+                    rating: averageRating,
+                    discountTiers: []
                 };
-            }));
 
-            result.forEach(product => {
-                delete product.categoryId;
-                delete product.createdAt;
-                delete product.updatedAt;
-            });
+                if (product.hasDiscount) {
+                    const discountTiers = await discountedProducts.findAll({
+                        where: { productId: product.id },
+                    });
+
+                    if (discountTiers.length === 0) {
+                        productResult.discountTiers.push({
+                            range: "No discount tiers available",
+                            discountedPrice: productPrice.toFixed(2),
+                        });
+                    } else {
+                        for (let tier of discountTiers) {
+                            const { startRange, endRange, discount } = tier;
+                            const discountedPrice = productPrice * (1 - discount / 100);
+
+                            productResult.discountTiers.push({
+                                range: `${startRange}-${endRange}`,
+                                discountedPrice: discountedPrice.toFixed(2),
+                            });
+                        }
+                    }
+                } else {
+                    productResult.discountTiers.push({
+                        range: "No discount",
+                        discountedPrice: productPrice.toFixed(2),
+                    });
+                }
+
+                delete productResult.categoryId;
+                delete productResult.createdAt;
+                delete productResult.updatedAt;
+
+                return productResult;
+            }));
 
             res.status(200).json(result);
         } catch (error) {
@@ -125,7 +202,84 @@ const productController = {
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
-    }
+    },
+    changeOrder: async (req, res) => {
+        try {
+            const { productId, homePage } = req.body;
+            console.log(productId, homePage);
+
+            const product = await Products.findByPk(productId);
+            if (!product) {
+                return res.status(404).json({ error: 'Product not found' });
+            }
+
+            if (homePage === 1) {
+                await product.update({ homeScreen: true });
+            } else {
+                await product.update({ homeScreen: false });
+            }
+
+            return res.status(200).json({ message: 'Order changed successfully' });
+        } catch (error) {
+            console.error("Error while changing order:", error);
+            return res.status(500).json({ error: error.message });
+        }
+    },
+    addDiscountTiers: async (req, res) => {
+        try {
+            const { productId, discountTiers } = req.body;
+            const product = await Products.findByPk(productId);
+
+            if (!product) {
+                return res.status(404).json({ error: 'Product not found' });
+            }
+
+            for (let tier of discountTiers) {
+                const { startRange, endRange, discount } = tier;
+
+                const parsedDiscount = parseFloat(discount.replace('%', '').trim());
+
+                if (isNaN(parsedDiscount) || parsedDiscount < 0 || parsedDiscount > 100) {
+                    return res.status(400).json({ error: 'Discount should be a valid number between 0 and 100' });
+                }
+
+                const overlappingTier = await discountedProducts.findAll({
+                    where: {
+                        [Op.or]: [
+                            { startRange: { [Op.between]: [startRange, endRange] } },
+                            { endRange: { [Op.between]: [startRange, endRange] } },
+                            {
+                                startRange: { [Op.lte]: startRange },
+                                endRange: { [Op.gte]: endRange },
+                            },
+                        ],
+                    },
+                });
+
+                if (overlappingTier.length > 0) {
+                    return res.status(400).json({ error: 'Overlapping tier found' });
+                }
+
+                await discountedProducts.create({
+                    productId,
+                    startRange,
+                    endRange,
+                    discount: parsedDiscount,
+                });
+            }
+
+            if (!product.hasDiscount) {
+                await Products.update({ hasDiscount: true }, { where: { id: productId } });
+            }
+
+            return res.status(200).json({
+                message: 'Discount tiers added successfully',
+            });
+        } catch (error) {
+            console.error("Error while adding discount tiers:", error);
+            return res.status(500).json({ error: error.message });
+        }
+    },
 };
 
 module.exports = productController;

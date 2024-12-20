@@ -1,6 +1,6 @@
 const reviewModel = require('../models/review.Model');
 const User = require('../models/user.Model');
-const Products = require('../models/prodcust.Model');
+const Products = require('../models/product.Model');
 const Category = require('../models/category.Model');
 
 const reviewController = {

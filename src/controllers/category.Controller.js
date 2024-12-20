@@ -1,4 +1,6 @@
 const Category = require('../models/category.Model');
+const Products = require('../models/product.Model');
+const { Op } = require('sequelize');
 
 const categoryController = {
     addCategory: async (req, res) => {
@@ -11,25 +13,98 @@ const categoryController = {
             res.status(500).json({ status: false, error: "Internal Server Error" });
         }
     },
-    getCategoryById: async (req, res) => {
+    getCategoryByIdAndName: async (req, res) => {
         try {
-            const { id } = req.query;
+            const { id, categoryName, productName } = req.query;
 
             if (id) {
-                const data = await Category.findByPk(id);
+                const data = await Category.findByPk(id, {
+                    include: [
+                        {
+                            model: Products,
+                            attributes: ['id', 'name', 'price', 'description', 'image'],
+                        },
+                    ],
+                });
+
                 if (!data) {
                     return res.status(404).json({ status: false, error: "Category not found" });
                 }
+
                 const category = data.dataValues;
                 category.image = `${req.protocol}://${req.get('host')}${category.image}`;
+                if (category.Products) {
+                    category.Products = category.Products.map((product) => {
+                        product.image = `${req.protocol}://${req.get('host')}${product.image}`;
+                        return product;
+                    });
+                }
+
                 return res.status(200).json({ status: true, category });
-            } else {
-                const categories = await Category.findAll();
-                const categoriesData = categories.map(category => {
+            } else if (categoryName || productName) {
+                const whereConditions = {};
+                if (categoryName) {
+                    whereConditions.name = {
+                        [Op.like]: `%${categoryName}%`,
+                    };
+                }
+
+                const categories = await Category.findAll({
+                    where: whereConditions,
+                    include: [
+                        {
+                            model: Products,
+                            attributes: ['id', 'name', 'price', 'description', 'image'],
+                            where: productName
+                                ? {
+                                    name: {
+                                        [Op.like]: `%${productName}%`,
+                                    },
+                                }
+                                : undefined,
+                        },
+                    ],
+                });
+
+                if (categories.length === 0) {
+                    return res.status(404).json({ status: false, error: "No categories found" });
+                }
+
+                const categoriesData = categories.map((category) => {
                     const categoryData = category.dataValues;
                     categoryData.image = `${req.protocol}://${req.get('host')}${categoryData.image}`;
+                    if (categoryData.Products) {
+                        categoryData.Products = categoryData.Products.map((product) => {
+                            product.image = `${req.protocol}://${req.get('host')}${product.image}`;
+                            return product;
+                        });
+                    }
                     return categoryData;
                 });
+
+                return res.status(200).json({ status: true, categories: categoriesData });
+            } else {
+                const categories = await Category.findAll({
+                    include: [
+                        {
+                            model: Products,
+                            attributes: ['id', 'name', 'price', 'description', 'image'],
+                        },
+                    ],
+                });
+
+                const categoriesData = categories.map((category) => {
+                    const categoryData = category.dataValues;
+                    categoryData.image = `${req.protocol}://${req.get('host')}${categoryData.image}`;
+                    if (categoryData.Products) {
+                        categoryData.Products = categoryData.Products.map((product) => {
+                            product.image = `${req.protocol}://${req.get('host')}${product.image}`;
+                            return product;
+                        });
+                    }
+                    return categoryData;
+                });
+
                 return res.status(200).json({ status: true, categories: categoriesData });
             }
         } catch (error) {

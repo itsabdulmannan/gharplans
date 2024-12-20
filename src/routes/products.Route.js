@@ -410,4 +410,189 @@ prodcustRoute.put('/:id', authenticate, authorize('admin'), productController.up
 
 prodcustRoute.delete('/:id', authenticate, authorize('admin'), productController.deleteProduct);
 
+/**
+ * @swagger
+ * /product/change-order:
+ *   post:
+ *     summary: Change the order of a product on the homepage
+ *     description: This endpoint allows the admin to change the order of a specific product on the homepage.
+ *     tags: [Products]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               productId:
+ *                 type: integer
+ *                 description: The ID of the product to change the order of
+ *                 example: 1
+ *               homePage:
+ *                 type: integer
+ *                 description: The new order index of the product on the homepage
+ *                 example: 1
+ *     responses:
+ *       200:
+ *         description: Product order updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Order changed successfully"
+ *       400:
+ *         description: Bad Request, invalid input or missing fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Invalid input"
+ *       404:
+ *         description: Product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Product not found"
+ *       500:
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error while changing order"
+ */
+prodcustRoute.post('/change-order', productController.changeOrder);
+
+/**
+ * @swagger
+ * /product/addDiscountTiers:
+ *   post:
+ *     summary: Add multiple discount tiers for a product
+ *     description: Adds multiple discount tiers for a specified product, ensuring no overlapping tiers exist.
+ *     tags: [Products]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - productId
+ *               - discountTiers
+ *             properties:
+ *               productId:
+ *                 type: integer
+ *                 description: The ID of the product.
+ *                 example: 1
+ *               discountTiers:
+ *                 type: array
+ *                 description: An array of discount tiers to be added for the product.
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - startRange
+ *                     - endRange
+ *                     - discount
+ *                   properties:
+ *                     startRange:
+ *                       type: number
+ *                       format: float
+ *                       description: The start range of the discount tier.
+ *                       example: 10.0
+ *                     endRange:
+ *                       type: number
+ *                       format: float
+ *                       description: The end range of the discount tier.
+ *                       example: 20.0
+ *                     discount:
+ *                       type: number
+ *                       format: float
+ *                       description: The discount percentage for this tier.
+ *                       example: 15.0
+ *     responses:
+ *       200:
+ *         description: Discount tiers added successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Discount tiers added successfully"
+ *                 tiers:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       productId:
+ *                         type: integer
+ *                         example: 1
+ *                       startRange:
+ *                         type: number
+ *                         example: 10.0
+ *                       endRange:
+ *                         type: number
+ *                         example: 20.0
+ *                       discount:
+ *                         type: number
+ *                         example: 15.0
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2024-12-16T10:00:00.000Z"
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2024-12-16T10:00:00.000Z"
+ *       400:
+ *         description: Validation error or overlapping tier exists.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Overlapping tier already exists"
+ *       404:
+ *         description: Product not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Product not found"
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error while adding discount tiers"
+ */
+
+prodcustRoute.post('/addDiscountTiers', productController.addDiscountTiers);
+
 module.exports = prodcustRoute;

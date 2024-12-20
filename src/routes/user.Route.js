@@ -20,7 +20,7 @@ const { authenticate } = require('../middleware/auth');
  * /user/register:
  *   post:
  *     summary: Register a new user
- *     description: This endpoint registers a new user into the system with name, email, password, contact number, address, and profile image.
+ *     description: This endpoint registers a new user into the system with first name, last name, email, password, contact number, address, city, date of birth, and profile image.
  *     tags: [User]
  *     requestBody:
  *       required: true
@@ -29,9 +29,12 @@ const { authenticate } = require('../middleware/auth');
  *           schema:
  *             type: object
  *             properties:
- *               name:
+ *               firstName:
  *                 type: string
- *                 example: John Doe
+ *                 example: John
+ *               lastName:
+ *                 type: string
+ *                 example: Doe
  *               email:
  *                 type: string
  *                 example: john.doe@example.com
@@ -43,7 +46,14 @@ const { authenticate } = require('../middleware/auth');
  *                 example: '+1234567890'
  *               address:
  *                 type: string
- *                 example: 123 Street Name, City
+ *                 example: 123 Street Name
+ *               city:
+ *                 type: string
+ *                 example: City Name
+ *               dob:
+ *                 type: string
+ *                 format: date
+ *                 example: "1990-01-01"
  *               profileImage:
  *                 type: string
  *                 example: "profile-pic.jpg"
@@ -58,9 +68,12 @@ const { authenticate } = require('../middleware/auth');
  *                 id:
  *                   type: integer
  *                   example: 1
- *                 name:
+ *                 firstName:
  *                   type: string
- *                   example: John Doe
+ *                   example: John
+ *                 lastName:
+ *                   type: string
+ *                   example: Doe
  *                 email:
  *                   type: string
  *                   example: john.doe@example.com
@@ -69,7 +82,14 @@ const { authenticate } = require('../middleware/auth');
  *                   example: '+1234567890'
  *                 address:
  *                   type: string
- *                   example: 123 Street Name, City
+ *                   example: 123 Street Name
+ *                 city:
+ *                   type: string
+ *                   example: City Name
+ *                 dob:
+ *                   type: string
+ *                   format: date
+ *                   example: "1990-01-01"
  *                 profileImage:
  *                   type: string
  *                   example: "profile-pic.jpg"

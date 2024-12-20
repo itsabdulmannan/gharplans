@@ -13,7 +13,7 @@ sequelize.authenticate()
         console.error('Unable to connect to the database:', error);
     });
 
-sequelize.sync({ force: false, alter: true }).then(() => {
+sequelize.sync({ force: false }).then(() => {
     console.log('Database & tables created!');
 }).catch((error) => {
     console.error('Unable to create database & tables:', error);

@@ -19,6 +19,10 @@ const Products = sequelize.define('products', {
         type: DataTypes.DECIMAL,
         allowNull: false
     },
+    weight: {
+        type: DataTypes.DECIMAL,
+        allowNull: true
+    },
     image: {
         type: DataTypes.STRING,
         allowNull: true
@@ -47,7 +51,17 @@ const Products = sequelize.define('products', {
     color: {
         type: DataTypes.JSON,
         allowNull: true
-    }
+    },
+    homeScreen: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+        defaultValue: false
+    },
+    hasDiscount: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+        defaultValue: false
+    },
 }, {
     tableName: 'products',
     timestamps: true,

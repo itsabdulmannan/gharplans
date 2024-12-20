@@ -32,6 +32,10 @@ const Order = sequelize.define('order', {
         allowNull: false,
         defaultValue: 'pending'
     },
+    deliveryCharges: {
+        type: DataTypes.DECIMAL,
+        allowNull: true,
+    },
     createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
@@ -41,6 +45,14 @@ const Order = sequelize.define('order', {
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW
+    },
+    sourceCity: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    destinationCity: {
+        type: DataTypes.STRING,
+        allowNull: true
     }
 }, {
     tableName: 'order',

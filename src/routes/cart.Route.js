@@ -81,7 +81,7 @@ cartRouter.post('/add', authenticate, authorize('User'), cartController.addItemT
  *       500:
  *         description: Internal Server Error
  */
-cartRouter.get('/items', authenticate, authorize('User'), cartController.getCartItem);
+cartRouter.get('/items', cartController.getCartItem);
 
 /**
  * @swagger

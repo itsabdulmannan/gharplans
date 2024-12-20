@@ -10,7 +10,7 @@ const generateOTP = () => {
 const userController = {
 
     registerUser: async (req, res) => {
-        const { name, email, password, contactNo, address, city, profileImage } = req.body;
+        const { firstName, lastName, email, password, contactNo, address, city, profileImage, dob } = req.body;
 
         const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
         if (!email || !emailRegex.test(email)) {
@@ -37,7 +37,9 @@ const userController = {
             const hashedPassword = await bcrypt.hash(password, salt);
 
             const newUser = {
-                name,
+                firstName,
+                lastName,
+                dob,
                 email,
                 password: hashedPassword,
                 role: 'User',

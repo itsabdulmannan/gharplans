@@ -1,9 +1,12 @@
-const Products = require('./prodcust.Model');
+const Products = require('./product.Model');
 const Category = require('./category.Model');
 const Review = require('./review.Model');
 const User = require('./user.Model');
 const cart = require('./cart.Model');
 const Order = require('./order.Model');
+const discountedPrice = require('./discountedProducts.Model');
+const ProductsDeliveryCharge = require('./productDeliveryCharges.Model');
+const Cities = require('./cities.Model');
 
 Products.belongsTo(Category, { foreignKey: 'categoryId' });
 Category.hasMany(Products, { foreignKey: 'categoryId' });
@@ -21,3 +24,15 @@ Order.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
 Order.belongsToMany(Products, { through: 'OrderItem', foreignKey: 'orderId' });
 Products.belongsToMany(Order, { through: 'OrderItem', foreignKey: 'productId' });
+
+Products.hasMany(discountedPrice, { foreignKey: 'productId', as: 'discountedProducts', });
+discountedPrice.belongsTo(Products, { foreignKey: 'productId', as: 'product', });
+
+Products.hasMany(ProductsDeliveryCharge, { foreignKey: 'productId', as: 'deliveryCharges' });
+ProductsDeliveryCharge.belongsTo(Products, { foreignKey: 'productId', as: 'product' });
+
+Cities.hasMany(ProductsDeliveryCharge, { foreignKey: 'sourcerCityId', as: 'sourceDeliveries' });
+ProductsDeliveryCharge.belongsTo(Cities, { foreignKey: 'sourcerCityId', as: 'sourceCity' });
+
+Cities.hasMany(ProductsDeliveryCharge, { foreignKey: 'destinationCityId', as: 'destinationDeliveries' });
+ProductsDeliveryCharge.belongsTo(Cities, { foreignKey: 'destinationCityId', as: 'destinationCity' });

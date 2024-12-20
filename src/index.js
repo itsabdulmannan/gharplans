@@ -7,9 +7,8 @@ require('dotenv').config();
 const setupSwaggger = require('./config/swqgger');
 setupSwaggger(app);
 
-//Association and Seeder
+// Association
 require('./models/associations.Model');
-const createAdminUser = require('./seed/seed');
 
 // Middleware for serving static files
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
@@ -26,13 +25,13 @@ app.use('/product', require('./routes/products.Route'));
 app.use('/reviews', require('./routes/review.Route'));
 app.use('/cart', require('./routes/cart.Route'));
 app.use('/orders', require('./routes/order.Route'));
+app.use('/favourites', require('./routes/favourite.Route'));
+app.use('/cities', require('./routes/cities.Route'));
+app.use('/delivery-charges', require('./routes/productDeliveryCharges.Router'));
+app.use('/quotation', require('./routes/getQuotation.Route'));
+app.use('/bank', require('./routes/bankAccountDetails.Route'));
 
 // Start the server
 app.listen(process.env.PORT, async () => {
     console.log(`Server is running on port ${process.env.PORT}`);
-    try {
-        await createAdminUser();
-    } catch (error) {
-        console.error("Error creating admin user:", error);
-    }
 });

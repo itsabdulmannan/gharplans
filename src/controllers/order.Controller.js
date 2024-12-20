@@ -2,6 +2,8 @@ const order = require('../models/order.Model');
 const User = require('../models/user.Model');
 const sequelize = require('../config/database');
 const cart = require('../models/cart.Model');
+const paymentRecords = require('../models/paymentRecords.Model');
+const { sendMail } = require('../config/mailer');
 
 const orderController = {
     generateOrderId: () => {
@@ -11,16 +13,27 @@ const orderController = {
     },
     addOrder: async (req, res) => {
         const generatedOrderId = orderController.generateOrderId();
-        const { userId, productInfo, totalAmount, paymentType } = req.body;
+        const { userId, productInfo, totalAmount, paymentType, sourceCity, destinationCity, deliveryCharges } = req.body;
 
         const transaction = await sequelize.transaction();
 
         try {
+            let totalProductAmount = 0;
+            let totalDeliveryCharges = 0;
+
+            productInfo.forEach(product => {
+                totalProductAmount += parseFloat(product.itemTotal);
+                totalDeliveryCharges += parseFloat(product.quantity) * parseFloat(product.deliveryCharges);
+            });
+            const recalculatedTotalAmount = totalProductAmount + totalDeliveryCharges;
             const orderData = {
                 userId,
                 productInfo,
-                totalAmount,
+                totalAmount: recalculatedTotalAmount.toFixed(2),
                 paymentType,
+                sourceCity,
+                destinationCity,
+                deliveryCharges: totalDeliveryCharges.toFixed(2),
                 orderId: generatedOrderId
             };
             const newOrder = await order.create(orderData, { transaction });
@@ -88,6 +101,69 @@ const orderController = {
             res.status(500).json({ status: false, message: "Internal server error." });
         }
     },
+    uploadScreenShot: async (req, res) => {
+        const { orderId } = req.params;
+        const { screenshot } = req.body;
+        try {
+            const orderData = await order.findOne({ where: { orderId } });
+            if (orderData) {
+                await paymentRecords.create({
+                    orderId: orderId,
+                    screenShot: screenshot,
+                    paymentStatus: 'pending',
+                    paymentType: 'bank',
+                });
+                const adminEmail = process.env.ADMIN_EMAIL;
+
+                const mailOptions = {
+                    from: process.env.SMTP_MAIL,
+                    to: adminEmail,
+                    subject: `Payment Screenshot Uploaded - Order ID: ${orderId}`,
+                    text: `Admin,\n\nA screenshot for payment has been uploaded for order ID ${orderId}. Please verify the payment.\n\nThank you.`,
+                };
+
+                await sendMail(mailOptions);
+
+                res.status(200).json({ status: true, message: "Screenshot uploaded successfully." });
+            } else {
+                res.status(404).json({ status: false, message: "Order not found." });
+            }
+        } catch (error) {
+            console.error("Error in uploadScreenShot: ", error);
+            res.status(500).json({ status: false, message: "Internal server error." });
+        }
+    },
+    verifyPayment: async (req, res) => {
+        const { orderId } = req.params;
+        const { paymentStatus } = req.body;
+
+        try {
+            const orderData = await order.findOne({ where: { orderId } });
+            if (orderData) {
+                await order.update({ paymentStatus }, { where: { orderId } });
+                if (paymentStatus === 'confirmed') {
+                    const user = await User.findOne({ where: { id: orderData.userId } });
+
+                    if (user) {
+                        const mailOptions = {
+                            from: process.env.SMTP_MAIL,
+                            to: user.email,
+                            subject: `Payment Successful - Order ID: ${orderId}`,
+                            text: `Dear ${user.name},\n\nYour payment for Order ID: ${orderId} has been successfully verified. Your order is now complete.\n\nThank you for shopping with us!`,
+                        };
+
+                        await sendMail(mailOptions);
+                    }
+                }
+                res.status(200).json({ status: true, message: "Payment status updated successfully." });
+            } else {
+                res.status(404).json({ status: false, message: "Order not found." });
+            }
+        } catch (error) {
+            console.error("Error in verifyPayment: ", error);
+            res.status(500).json({ status: false, message: "Internal server error." });
+        }
+    }
 };
 
 module.exports = orderController;
