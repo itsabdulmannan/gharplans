@@ -43,10 +43,10 @@ Thumbs.db
 # config/
 
 
-# Images
-/srcpublic/images/*
-!public/images/.gitkeep
+# Ignore all files in the images and pdf directories
+/public/images/*
+/public/pdf/*
 
-# PDFs
-/src/public/pdf/*
-!/srcpublic/pdf/.gitkeep
+# But keep the .gitkeep files in those directories
+!/public/images/.gitkeep
+!/public/pdf/.gitkeep
