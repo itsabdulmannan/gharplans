@@ -1,5 +1,6 @@
 const orderROuter = require('express').Router();
 const orderController = require('../controllers/order.Controller');
+const { authenticate, authorize } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -77,7 +78,7 @@ const orderController = require('../controllers/order.Controller');
  *         description: Internal server error
  */
 
-orderROuter.post('/', orderController.addOrder);
+orderROuter.post('/', authenticate, authorize('User'), orderController.addOrder);
 
 /**
  * @swagger
@@ -118,7 +119,7 @@ orderROuter.post('/', orderController.addOrder);
  *       500:
  *         description: Internal server error
  */
-orderROuter.get('/:orderId', orderController.getOrderById);
+orderROuter.get('/:orderId', authenticate, authorize('User'), orderController.getOrderById);
 
 /**
  * @swagger
@@ -159,7 +160,7 @@ orderROuter.get('/:orderId', orderController.getOrderById);
  *       500:
  *         description: Internal server error
  */
-orderROuter.delete('/:orderId', orderController.cancelOrder);
+orderROuter.delete('/:orderId', authenticate, authorize('User'), orderController.cancelOrder);
 
 /**
  * @swagger
@@ -229,7 +230,7 @@ orderROuter.delete('/:orderId', orderController.cancelOrder);
  *                   example: "Internal server error."
  */
 
-orderROuter.post('/:orderId/upload-screenshot', orderController.uploadScreenShot);
+orderROuter.post('/:orderId/upload-screenshot', authenticate, authorize('User'), orderController.uploadScreenShot);
 
 /**
  * @swagger
@@ -299,6 +300,6 @@ orderROuter.post('/:orderId/upload-screenshot', orderController.uploadScreenShot
  *                   example: "Internal server error."
  */
 
-orderROuter.put('/:orderId/verify-payment', orderController.verifyPayment);
+orderROuter.put('/:orderId/verify-payment', authenticate, authorize('admin'), orderController.verifyPayment);
 
 module.exports = orderROuter;

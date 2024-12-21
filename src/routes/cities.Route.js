@@ -39,7 +39,7 @@ const { authenticate, authorize } = require('../middleware/auth');
  *                 message:
  *                   type: string
  */
-citiesRouter.get('/', citiesController.getCities);
+citiesRouter.get('/', authenticate, authorize('admin', 'User'), citiesController.getCities);
 /**
  * @swagger
  * /cities:

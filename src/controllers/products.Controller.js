@@ -1,14 +1,15 @@
 const Products = require('../models/product.Model');
 const Category = require('../models/category.Model');
-const { Op, where } = require('sequelize');
+const { Op } = require('sequelize');
 const Review = require('../models/review.Model');
 const sequelize = require('../config/database');
-const discountedProducts = require('../models/discountedProducts.Model')
+const discountedProducts = require('../models/discountedProducts.Model');
+const similerProductModel = require('../models/similarProducts.Model');
 
 const productController = {
     getProducts: async (req, res) => {
         try {
-            const { id } = req.query;
+            const { id, name, minPrice, maxPrice } = req.query;
 
             if (id) {
                 const product = await Products.findOne({
@@ -62,7 +63,6 @@ const productController = {
                     } else {
                         for (let tier of discountTiers) {
                             const { startRange, endRange, discount } = tier;
-                            // Calculate the discounted price based on the discount percentage
                             const discountedPrice = productPrice * (1 - discount / 100);
 
                             result.discountTiers.push({
@@ -85,8 +85,22 @@ const productController = {
                 return res.status(200).json(result);
             }
 
+            const whereConditions = {};
+            if (name) {
+                whereConditions.name = { [Op.like]: `%${name}%` };
+            }
+            if (minPrice) {
+                whereConditions.price = { [Op.gte]: parseFloat(minPrice) };
+            }
+            if (maxPrice) {
+                whereConditions.price = {
+                    ...whereConditions.price,
+                    [Op.lte]: parseFloat(maxPrice),
+                };
+            }
+
             const products = await Products.findAll({
-                where: {},
+                where: whereConditions,
                 order: [
                     ['homeScreen', 'DESC'],
                     ['createdAt', 'DESC'],
@@ -280,6 +294,89 @@ const productController = {
             return res.status(500).json({ error: error.message });
         }
     },
+    addSimilarProducts: async (req, res) => {
+        try {
+            console.log("first")
+            const { productId, similarProducts } = req.body;
+
+            const product = await Products.findByPk(productId);
+
+            if (!product) {
+                return res.status(404).json({ error: 'Product not found' });
+            }
+
+            const createdSimilarProducts = [];
+
+            for (const similarProductId of similarProducts) {
+                const similarProduct = await Products.findByPk(similarProductId);
+
+                if (!similarProduct) {
+                    return res.status(404).json({
+                        error: `Similar product with ID ${similarProductId} not found`,
+                    });
+                }
+
+                const createdEntry = await similerProductModel.create({
+                    productId,
+                    similarProductId,
+                });
+
+                createdSimilarProducts.push(createdEntry);
+            }
+
+            return res.status(200).json({
+                status: true,
+                message: 'Similar products added successfully',
+                data: createdSimilarProducts,
+            });
+        } catch (error) {
+            console.error("Error while adding similar products:", error);
+            return res.status(500).json({ error: error.message });
+        }
+    },
+    getSimilarProducts: async (req, res) => {
+        try {
+            const { productId } = req.params;
+
+            const product = await Products.findByPk(productId);
+
+            if (!product) {
+                return res.status(404).json({ error: 'Product not found' });
+            }
+
+            const similarProducts = await similerProductModel.findAll({
+                where: { productId },
+                include: [
+                    {
+                        model: Products,
+                        as: 'similarProductDetails',
+                        attributes: ['id', 'name', 'price', 'image'],
+                    },
+                ],
+                raw: true, 
+            });
+    
+            const host = req.protocol + '://' + req.get('host');
+    
+            const response = similarProducts.map(item => {
+                return {
+                    id: item['similarProductDetails.id'],
+                    name: item['similarProductDetails.name'],
+                    price: item['similarProductDetails.price'],
+                    image: host + item['similarProductDetails.image']
+                };
+            });
+
+        return res.status(200).json({
+            status: true,
+            message: 'Similar products fetched successfully',
+            data: response,
+        });
+        } catch (error) {
+            console.error("Error while fetching similar products:", error);
+            return res.status(500).json({ error: error.message });
+        }
+    }
 };
 
 module.exports = productController;

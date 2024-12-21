@@ -1,5 +1,6 @@
 const quotationRouter = require('express').Router();
 const quotationController = require('../controllers/getQuotation.Controller');
+const { authenticate, authorize } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -77,6 +78,6 @@ const quotationController = require('../controllers/getQuotation.Controller');
  *                   example: "Internal server error"
  */
 
-quotationRouter.post('/', quotationController.getQuotation);
+quotationRouter.post('/', authenticate, authorize('admin'), quotationController.getQuotation);
 
 module.exports = quotationRouter;

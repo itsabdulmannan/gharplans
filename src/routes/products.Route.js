@@ -7,7 +7,7 @@ const { authenticate, authorize } = require('../middleware/auth');
  * /product:
  *   get:
  *     summary: Retrieve a product or a list of products
- *     description: Fetch all the products available in the store or a specific product by its ID if the 'id' query parameter is provided.
+ *     description: Fetch all the products available in the store or a specific product by its ID if the 'id' query parameter is provided. Filters by product name and price range are also supported.
  *     tags:
  *       - Products
  *     parameters:
@@ -18,6 +18,29 @@ const { authenticate, authorize } = require('../middleware/auth');
  *         schema:
  *           type: integer
  *           example: 1
+ *       - in: query
+ *         name: name
+ *         required: false
+ *         description: The name of the product to search for (partial match).
+ *         schema:
+ *           type: string
+ *           example: "Smartphone"
+ *       - in: query
+ *         name: minPrice
+ *         required: false
+ *         description: The minimum price of the products to retrieve.
+ *         schema:
+ *           type: number
+ *           format: float
+ *           example: 100.00
+ *       - in: query
+ *         name: maxPrice
+ *         required: false
+ *         description: The maximum price of the products to retrieve.
+ *         schema:
+ *           type: number
+ *           format: float
+ *           example: 500.00
  *     responses:
  *       200:
  *         description: A product or a list of products.
@@ -474,7 +497,7 @@ prodcustRoute.delete('/:id', authenticate, authorize('admin'), productController
  *                   type: string
  *                   example: "Error while changing order"
  */
-prodcustRoute.post('/change-order', productController.changeOrder);
+prodcustRoute.post('/change-order', authenticate, authorize('admin'), productController.changeOrder);
 
 /**
  * @swagger
@@ -593,6 +616,152 @@ prodcustRoute.post('/change-order', productController.changeOrder);
  *                   example: "Error while adding discount tiers"
  */
 
-prodcustRoute.post('/addDiscountTiers', productController.addDiscountTiers);
+prodcustRoute.post('/addDiscountTiers', authenticate, authorize('admin'), productController.addDiscountTiers);
+
+/**
+ * @swagger
+ * /product/similar-products/{productId}:
+ *   get:
+ *     summary: Fetch similar products for a specific product
+ *     tags:
+ *       - Similar Products
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the product to fetch similar products for
+ *     responses:
+ *       200:
+ *         description: Similar products fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Similar products fetched successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       productId:
+ *                         type: integer
+ *                         example: 1
+ *                       similarProductId:
+ *                         type: integer
+ *                         example: 2
+ *                       similarProductDetails:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             example: 2
+ *                           name:
+ *                             type: string
+ *                             example: Product B
+ *                           price:
+ *                             type: number
+ *                             format: float
+ *                             example: 200.50
+ *                           image:
+ *                             type: string
+ *                             example: https://example.com/image.jpg
+ *       404:
+ *         description: Product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Product not found
+ *       500:
+ *         description: Internal server error
+ */
+
+prodcustRoute.get('/similar-products/:productId', productController.getSimilarProducts);
+
+/**
+ * @swagger
+ * /product/similar-products:
+ *   post:
+ *     summary: Add similar products for a specific product
+ *     tags:
+ *       - Similar Products
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - productId
+ *               - similarProducts
+ *             properties:
+ *               productId:
+ *                 type: integer
+ *                 description: The ID of the product for which similar products are being added
+ *               similarProducts:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 description: An array of product IDs to be added as similar products
+ *             example:
+ *               productId: 1
+ *               similarProducts: [2, 3, 4]
+ *     responses:
+ *       200:
+ *         description: Similar products added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Similar products added successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       productId:
+ *                         type: integer
+ *                         example: 1
+ *                       similarProductId:
+ *                         type: integer
+ *                         example: 2
+ *       404:
+ *         description: Product or similar product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Product not found
+ *       500:
+ *         description: Internal server error
+ */
+
+prodcustRoute.post('/similar-products', authenticate, authorize('admin'), productController.addSimilarProducts);
 
 module.exports = prodcustRoute;

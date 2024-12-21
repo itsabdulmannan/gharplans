@@ -1,5 +1,6 @@
 const bankAccountDetailsRouter = require('express').Router();
 const bankAccountDetailsController = require('../controllers/bankAccountDetails.Controller');
+const { authenticate, authorize } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -87,7 +88,7 @@ const bankAccountDetailsController = require('../controllers/bankAccountDetails.
  *       500:
  *         description: Internal server error
  */
-bankAccountDetailsRouter.post('/bankAccountDetails', bankAccountDetailsController.addBankAccountDetails);
+bankAccountDetailsRouter.post('/bankAccountDetails', authenticate, authorize('admin'), bankAccountDetailsController.addBankAccountDetails);
 
 /**
  * @swagger
@@ -107,7 +108,7 @@ bankAccountDetailsRouter.post('/bankAccountDetails', bankAccountDetailsControlle
  *       500:
  *         description: Internal server error
  */
-bankAccountDetailsRouter.get('/bankAccountDetails', bankAccountDetailsController.getBankAccountDetails);
+bankAccountDetailsRouter.get('/bankAccountDetails', authenticate, bankAccountDetailsController.getBankAccountDetails);
 
 /**
  * @swagger
@@ -134,7 +135,7 @@ bankAccountDetailsRouter.get('/bankAccountDetails', bankAccountDetailsController
  *       500:
  *         description: Internal server error
  */
-bankAccountDetailsRouter.get('/bankAccountDetails/:id', bankAccountDetailsController.getBankAccountDetailsById);
+bankAccountDetailsRouter.get('/bankAccountDetails/:id', authenticate, authorize('admin'), bankAccountDetailsController.getBankAccountDetailsById);
 
 /**
  * @swagger
@@ -187,7 +188,7 @@ bankAccountDetailsRouter.get('/bankAccountDetails/:id', bankAccountDetailsContro
  *       500:
  *         description: Internal server error
  */
-bankAccountDetailsRouter.put('/bankAccountDetails/:id', bankAccountDetailsController.updateBankAccountDetails);
+bankAccountDetailsRouter.put('/bankAccountDetails/:id', authenticate, authorize('admin'), bankAccountDetailsController.updateBankAccountDetails);
 
 /**
  * @swagger
@@ -210,6 +211,6 @@ bankAccountDetailsRouter.put('/bankAccountDetails/:id', bankAccountDetailsContro
  *       500:
  *         description: Internal server error
  */
-bankAccountDetailsRouter.delete('/bankAccountDetails/:id', bankAccountDetailsController.deleteBankAccountDetails);
+bankAccountDetailsRouter.delete('/bankAccountDetails/:id', authenticate, authorize('admin'), bankAccountDetailsController.deleteBankAccountDetails);
 
 module.exports = bankAccountDetailsRouter;
