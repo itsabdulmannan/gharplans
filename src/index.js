@@ -30,6 +30,7 @@ app.use('/cities', require('./routes/cities.Route'));
 app.use('/delivery-charges', require('./routes/productDeliveryCharges.Router'));
 app.use('/quotation', require('./routes/getQuotation.Route'));
 app.use('/bank', require('./routes/bankAccountDetails.Route'));
+app.use('/utm', require('./routes/utm.Route'));
 
 // Start the server
 app.listen(process.env.PORT, async () => {

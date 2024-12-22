@@ -63,7 +63,7 @@ reviewRouter.post('/', authenticate, authorize('User'), reviewController.addRevi
  * @swagger
  * /reviews:
  *   get:
- *     summary: Get all reviews or filter by userId or id.
+ *     summary: Get all reviews or filter by userId, id, or productId with pagination support.
  *     tags: [Reviews]
  *     parameters:
  *       - in: query
@@ -78,6 +78,26 @@ reviewRouter.post('/', authenticate, authorize('User'), reviewController.addRevi
  *         schema:
  *           type: integer
  *         description: Filter reviews by review ID.
+ *       - in: query
+ *         name: productId
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: Filter reviews by product ID.
+ *       - in: query
+ *         name: offset
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: The number of records to skip for pagination (default is 0).
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: The number of records to return for pagination (default is 10).
  *     responses:
  *       200:
  *         description: Reviews fetched successfully.
@@ -88,8 +108,10 @@ reviewRouter.post('/', authenticate, authorize('User'), reviewController.addRevi
  *               properties:
  *                 status:
  *                   type: boolean
+ *                   description: Indicates if the request was successful.
  *                 message:
  *                   type: string
+ *                   description: Response message.
  *                 data:
  *                   type: array
  *                   items:
@@ -97,18 +119,51 @@ reviewRouter.post('/', authenticate, authorize('User'), reviewController.addRevi
  *                     properties:
  *                       id:
  *                         type: integer
- *                       userId:
- *                         type: integer
- *                       productId:
- *                         type: integer
  *                       rating:
  *                         type: number
  *                         format: float
  *                       review:
  *                         type: string
+ *                       status:
+ *                         type: string
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       productId:
+ *                         type: integer
+ *                         description: The ID of the associated product.
+ *                       user:
+ *                         type: object
+ *                         properties:
+ *                           firstName:
+ *                             type: string
+ *                           lastName:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                       product:
+ *                         type: object
+ *                         properties:
+ *                           name:
+ *                             type: string
+ *                           category:
+ *                             type: object
+ *                             properties:
+ *                               name:
+ *                                 type: string
  *       500:
  *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
  */
+
 reviewRouter.get('/', authenticate, authorize('admin', 'User'), reviewController.getReviews);
 
 /**

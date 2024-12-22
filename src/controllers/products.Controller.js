@@ -9,7 +9,11 @@ const similerProductModel = require('../models/similarProducts.Model');
 const productController = {
     getProducts: async (req, res) => {
         try {
-            const { id, name, minPrice, maxPrice } = req.query;
+            const { id, name, minPrice, maxPrice, offset, limit } = req.query;
+
+            // Pagination
+            const pageOffset = parseInt(offset) || 0;
+            const pageLimit = parseInt(limit) || 10;
 
             if (id) {
                 const product = await Products.findOne({
@@ -85,6 +89,7 @@ const productController = {
                 return res.status(200).json(result);
             }
 
+            // Pagination and filtering for product listing
             const whereConditions = {};
             if (name) {
                 whereConditions.name = { [Op.like]: `%${name}%` };
@@ -99,7 +104,7 @@ const productController = {
                 };
             }
 
-            const products = await Products.findAll({
+            const { count, rows: products } = await Products.findAndCountAll({
                 where: whereConditions,
                 order: [
                     ['homeScreen', 'DESC'],
@@ -109,6 +114,8 @@ const productController = {
                     model: Category,
                     attributes: ['id', 'name'],
                 },
+                offset: pageOffset,
+                limit: pageLimit,
             });
 
             const host = req.protocol + '://' + req.get('host');
@@ -177,11 +184,24 @@ const productController = {
                 return productResult;
             }));
 
-            res.status(200).json(result);
+            const pagination = {
+                totalRecords: count,
+                totalPages: Math.ceil(count / pageLimit),
+                currentPage: Math.floor(pageOffset / pageLimit) + 1,
+                perPage: pageLimit
+            };
+
+            res.status(200).json({
+                status: true,
+                products: result,
+                pagination
+            });
+
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
     },
+
     createProduct: async (req, res) => {
         try {
             console.log(req.body)
@@ -353,11 +373,11 @@ const productController = {
                         attributes: ['id', 'name', 'price', 'image'],
                     },
                 ],
-                raw: true, 
+                raw: true,
             });
-    
+
             const host = req.protocol + '://' + req.get('host');
-    
+
             const response = similarProducts.map(item => {
                 return {
                     id: item['similarProductDetails.id'],
@@ -367,11 +387,11 @@ const productController = {
                 };
             });
 
-        return res.status(200).json({
-            status: true,
-            message: 'Similar products fetched successfully',
-            data: response,
-        });
+            return res.status(200).json({
+                status: true,
+                message: 'Similar products fetched successfully',
+                data: response,
+            });
         } catch (error) {
             console.error("Error while fetching similar products:", error);
             return res.status(500).json({ error: error.message });

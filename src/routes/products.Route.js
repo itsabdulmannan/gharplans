@@ -7,7 +7,7 @@ const { authenticate, authorize } = require('../middleware/auth');
  * /product:
  *   get:
  *     summary: Retrieve a product or a list of products
- *     description: Fetch all the products available in the store or a specific product by its ID if the 'id' query parameter is provided. Filters by product name and price range are also supported.
+ *     description: Fetch all the products available in the store or a specific product by its ID if the 'id' query parameter is provided. Filters by product name and price range are also supported. Pagination is available with 'limit' and 'offset' query parameters.
  *     tags:
  *       - Products
  *     parameters:
@@ -24,7 +24,6 @@ const { authenticate, authorize } = require('../middleware/auth');
  *         description: The name of the product to search for (partial match).
  *         schema:
  *           type: string
- *           example: "Smartphone"
  *       - in: query
  *         name: minPrice
  *         required: false
@@ -41,6 +40,20 @@ const { authenticate, authorize } = require('../middleware/auth');
  *           type: number
  *           format: float
  *           example: 500.00
+ *       - in: query
+ *         name: offset
+ *         required: false
+ *         description: The starting point of the records to retrieve (used for pagination).
+ *         schema:
+ *           type: integer
+ *           example: 0
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         description: The number of products to retrieve per page (used for pagination).
+ *         schema:
+ *           type: integer
+ *           example: 10
  *     responses:
  *       200:
  *         description: A product or a list of products.
@@ -52,51 +65,68 @@ const { authenticate, authorize } = require('../middleware/auth');
  *                 status:
  *                   type: boolean
  *                   example: true
- *                 product:
+ *                 products:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       categoryId:
+ *                         type: integer
+ *                         example: 2
+ *                       name:
+ *                         type: string
+ *                         example: "Smartphone"
+ *                       price:
+ *                         type: number
+ *                         format: float
+ *                         example: 699.99
+ *                       image:
+ *                         type: string
+ *                         example: "/images/smartphone.png"
+ *                       description:
+ *                         type: string
+ *                         example: "Latest model with advanced features."
+ *                       shortDescription:
+ *                         type: string
+ *                         example: "Advanced smartphone with amazing features."
+ *                       addiotionalInformation:
+ *                         type: string
+ *                         example: "Includes a free case and screen protector."
+ *                       status:
+ *                         type: boolean
+ *                         example: true
+ *                       options:
+ *                         type: object
+ *                         example: { "color": "black", "memory": "64GB" }
+ *                       color:
+ *                         type: string
+ *                         example: "black"
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2024-11-28T18:38:56.541Z"
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2024-11-28T18:38:56.541Z"
+ *                 pagination:
  *                   type: object
  *                   properties:
- *                     id:
+ *                     totalRecords:
+ *                       type: integer
+ *                       example: 100
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 10
+ *                     currentPage:
  *                       type: integer
  *                       example: 1
- *                     categoryId:
+ *                     perPage:
  *                       type: integer
- *                       example: 2
- *                     name:
- *                       type: string
- *                       example: "Smartphone"
- *                     price:
- *                       type: number
- *                       format: float
- *                       example: 699.99
- *                     image:
- *                       type: string
- *                       example: "/images/smartphone.png"
- *                     description:
- *                       type: string
- *                       example: "Latest model with advanced features."
- *                     shortDescription:
- *                       type: string
- *                       example: "Advanced smartphone with amazing features."
- *                     addiotionalInformation:
- *                       type: string
- *                       example: "Includes a free case and screen protector."
- *                     status:
- *                       type: boolean
- *                       example: true
- *                     options:
- *                       type: object
- *                       example: { "color": "black", "memory": "64GB" }
- *                     color:
- *                       type: string
- *                       example: "black"
- *                     createdAt:
- *                       type: string
- *                       format: date-time
- *                       example: "2024-11-28T18:38:56.541Z"
- *                     updatedAt:
- *                       type: string
- *                       format: date-time
- *                       example: "2024-11-28T18:38:56.541Z"
+ *                       example: 10
  *       404:
  *         description: Product not found.
  *         content:
@@ -146,7 +176,7 @@ prodcustRoute.get('/', productController.getProducts);
  *               name:
  *                 type: string
  *                 description: The name of the product.
- *                 example: "Smartphone"
+ *                 example: "Shower Set"
  *               description:
  *                 type: string
  *                 description: A description of the product.
@@ -159,15 +189,15 @@ prodcustRoute.get('/', productController.getProducts);
  *               image:
  *                 type: string
  *                 description: URL of the product image.
- *                 example: "/images/smartphone.png"
+ *                 example: "/images/shower.png"
  *               shortDescription:
  *                 type: string
  *                 description: A short description of the product.
- *                 example: "Advanced smartphone with amazing features."
+ *                 example: "Advanced producst with amazing features."
  *               addiotionalInformation:
  *                 type: string
  *                 description: Additional information about the product.
- *                 example: "Includes a free case and screen protector."
+ *                 example: "Product includes a free soap holder."
  *               status:
  *                 type: boolean
  *                 description: Whether the product is active or not.
@@ -175,7 +205,7 @@ prodcustRoute.get('/', productController.getProducts);
  *               options:
  *                 type: object
  *                 description: Optional attributes like color, size, etc.
- *                 example: { "color": "black", "memory": "64GB" }
+ *                 example: { "color": "black" }
  *               color:
  *                 type: object
  *                 description: Available color options for the product.

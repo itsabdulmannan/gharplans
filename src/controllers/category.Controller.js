@@ -15,7 +15,7 @@ const categoryController = {
     },
     getCategoryByIdAndName: async (req, res) => {
         try {
-            const { id, categoryName, productName } = req.query;
+            const { id, categoryName, productName, offset = 0, limit = 10 } = req.query;
 
             if (id) {
                 const data = await Category.findByPk(id, {
@@ -64,7 +64,27 @@ const categoryController = {
                                 : undefined,
                         },
                     ],
+                    offset: parseInt(offset),
+                    limit: parseInt(limit),
                 });
+
+                const totalCategories = await Category.count({
+                    where: whereConditions,
+                    include: [
+                        {
+                            model: Products,
+                            where: productName
+                                ? {
+                                    name: {
+                                        [Op.like]: `%${productName}%`,
+                                    },
+                                }
+                                : undefined,
+                        },
+                    ],
+                });
+
+                const totalPages = Math.ceil(totalCategories / limit);
 
                 if (categories.length === 0) {
                     return res.status(404).json({ status: false, error: "No categories found" });
@@ -82,7 +102,17 @@ const categoryController = {
                     return categoryData;
                 });
 
-                return res.status(200).json({ status: true, categories: categoriesData });
+                return res.status(200).json({
+                    status: true,
+                    categories:
+                        categoriesData,
+                    pagination: {
+                        totalRecords: totalCategories,
+                        totalPages: totalPages,
+                        currentPage: Math.ceil((offset / limit) + 1),
+                        perPage: limit,
+                    },
+                });
             } else {
                 const categories = await Category.findAll({
                     include: [
@@ -91,7 +121,12 @@ const categoryController = {
                             attributes: ['id', 'name', 'price', 'description', 'image'],
                         },
                     ],
+                    offset: parseInt(offset),
+                    limit: parseInt(limit),
                 });
+
+                const totalCategories = await Category.count();
+                const totalPages = Math.ceil(totalCategories / limit);
 
                 const categoriesData = categories.map((category) => {
                     const categoryData = category.dataValues;
@@ -105,7 +140,16 @@ const categoryController = {
                     return categoryData;
                 });
 
-                return res.status(200).json({ status: true, categories: categoriesData });
+                return res.status(200).json({
+                    status: true,
+                    categories: categoriesData,
+                    pagination: {
+                        totalRecords: totalCategories,
+                        totalPages: totalPages,
+                        currentPage: Math.ceil((offset / limit) + 1),
+                        perPage: limit,
+                    },
+                });
             }
         } catch (error) {
             console.error(error);

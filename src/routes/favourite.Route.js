@@ -155,6 +155,20 @@ favouriteRouter.delete('/remove', authenticate, authorize('User'), favouritesPro
  *           type: string
  *         required: true
  *         description: ID of the user
+ *       - in: query
+ *         name: offset
+ *         required: false
+ *         description: Number of items to skip (for pagination).
+ *         schema:
+ *           type: integer
+ *           example: 0
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         description: Number of items to return (for pagination).
+ *         schema:
+ *           type: integer
+ *           example: 10
  *     responses:
  *       200:
  *         description: List of favourite products
@@ -170,11 +184,29 @@ favouriteRouter.delete('/remove', authenticate, authorize('User'), favouritesPro
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/FavouriteProduct'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     offset:
+ *                       type: integer
+ *                       example: 0
  *       404:
- *         $ref: '#/components/responses/UserNotFound'
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "User not found"
  *       500:
  *         description: Internal server error
  */
+
 favouriteRouter.get('/:userId', authenticate, authorize('User'), favouritesProductsController.getFavouriteProducts);
 
 module.exports = favouriteRouter;

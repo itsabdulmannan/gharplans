@@ -16,16 +16,17 @@ const reviewController = {
     },
     getReviews: async (req, res) => {
         try {
-            const { id, userId } = req.query;
+            const { id, userId, productId, offset = 0, limit = 10 } = req.query;
             let whereCondition = {};
             if (id) whereCondition.id = id;
             if (userId) whereCondition.userId = userId;
+            if (productId) whereCondition.productId = productId;
             const reviews = await reviewModel.findAll({
                 where: whereCondition,
                 attributes: ['id', 'rating', 'review', 'status', 'createdAt'],
                 include: [{
                     model: User,
-                    attributes: ['name', 'email']
+                    attributes: ['firstName', 'lastName', 'email']
                 },
                 {
                     model: Products,
@@ -34,8 +35,16 @@ const reviewController = {
                         model: Category,
                         attributes: ['name']
                     }]
-                }]
+                }],
+                offset: parseInt(offset),
+                limit: parseInt(limit)
             });
+
+            const totalReviews = await reviewModel.count({
+                where: whereCondition
+            });
+
+            const totalPages = Math.ceil(totalReviews / limit);
 
             const response = reviews.map(review => {
                 const reviewData = review.toJSON();
@@ -44,7 +53,17 @@ const reviewController = {
                 return reviewData;
             });
 
-            res.status(200).json({ status: true, message: "Reviews fetched successfully", data: response });
+            res.status(200).json({
+                status: true,
+                message: "Reviews fetched successfully",
+                data: response,
+                pagination: {
+                    totalRecords: totalReviews,
+                    totalPages: totalPages,
+                    currentPage: Math.ceil((offset / limit) + 1),
+                    perPage: limit
+                }
+            });
         } catch (error) {
             console.error("Error while fetching reviews", error);
             res.status(500).json({ status: false, message: "Internal server error." });

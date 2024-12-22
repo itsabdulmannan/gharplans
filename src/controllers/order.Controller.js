@@ -56,33 +56,56 @@ const orderController = {
             res.status(500).json({ status: false, message: "Internal server error." });
         }
     },
-    getOrderById: async (req, res) => {
-        const { orderId } = req.params;
+    getOrders: async (req, res) => {
+        const { orderId, limit, offset } = req.query;
+
+        const pageLimit = parseInt(limit) || 10;
+        const pageOffset = parseInt(offset) || 0;
+
+        const queryOptions = {
+            limit: pageLimit,
+            offset: pageOffset,
+            include: [
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: ['id', 'firstName', 'lastName', 'email'],
+                }
+            ]
+        };
+
+        if (orderId) {
+            queryOptions.where = { orderId };
+        }
+
         try {
-            const orderData = await order.findOne({
-                where: { orderId },
-                include: [
-                    {
-                        model: User,
-                        as: 'user',
-                        attributes: ['id', 'name', 'email'],
-                    }
-                ]
-            });
+            const ordersData = orderId
+                ? await order.findOne(queryOptions)
+                : await order.findAll(queryOptions);
 
-            if (orderData) {
-                const responseData = {
-                    ...orderData.toJSON(),
-                };
+            if (ordersData) {
+                const responseData = Array.isArray(ordersData)
+                    ? ordersData.map(order => ({ ...order.toJSON() }))
+                    : { ...ordersData.toJSON() };
 
-                delete responseData.userId;
-
-                res.status(200).json({ status: true, orderData: responseData });
+                if (!orderId) {
+                    res.status(200).json({
+                        status: true,
+                        ordersData: responseData,
+                        pagination: {
+                            limit: pageLimit,
+                            offset: pageOffset
+                        }
+                    });
+                } else {
+                    delete responseData.userId;
+                    res.status(200).json({ status: true, orderData: responseData });
+                }
             } else {
-                res.status(404).json({ status: false, message: "Order not found." });
+                res.status(404).json({ status: false, message: orderId ? "Order not found." : "No orders found." });
             }
         } catch (error) {
-            console.error("Error in getOrderById: ", error);
+            console.error("Error in getOrders: ", error);
             res.status(500).json({ status: false, message: "Internal server error." });
         }
     },

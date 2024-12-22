@@ -49,12 +49,25 @@ const favouritesProductsController = {
     getFavouriteProducts: async (req, res) => {
         try {
             const { userId } = req.params;
+            const { offset = 0, limit = 10 } = req.query;
             const existinguser = await user.findByPk(userId);
             if (!existinguser) {
                 res.status(404).json({ status: false, message: "User not found" });
             }
-            const favProducts = await favourites.findAll({ where: { userId } });
-            return res.status(200).json({ status: true, favProducts });
+            const favProducts = await favourites.findAll({
+                where: { userId },
+                limit: parseInt(limit),
+                offset: parseInt(offset),
+            });
+            return res.status(200).json({
+                status: true,
+                message: "Favourite products fetched successfully.",
+                data: favProducts,
+                pagination: {
+                    limit: parseInt(limit),
+                    offset: parseInt(offset),
+                },
+            });
         } catch (error) {
             console.error("Error while fetching favourite products", error);
             res.status(500).json({ status: false, message: "Internal server error." });

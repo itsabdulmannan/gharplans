@@ -1,4 +1,4 @@
-const orderROuter = require('express').Router();
+const orderRouter = require('express').Router();
 const orderController = require('../controllers/order.Controller');
 const { authenticate, authorize } = require('../middleware/auth');
 
@@ -78,21 +78,35 @@ const { authenticate, authorize } = require('../middleware/auth');
  *         description: Internal server error
  */
 
-orderROuter.post('/', authenticate, authorize('User'), orderController.addOrder);
+orderRouter.post('/', authenticate, authorize('User'), orderController.addOrder);
 
 /**
  * @swagger
- * /orders/{orderId}:
+ * /orders:
  *   get:
- *     summary: Get order by ID
+ *     summary: Get orders by ID or all orders
  *     tags: [Orders]
  *     parameters:
- *       - in: path
+ *       - in: query
  *         name: orderId
- *         required: true
+ *         required: false
  *         schema:
  *           type: string
- *         description: Unique ID of the order
+ *         description: Unique ID of the order (optional, to fetch a specific order)
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of orders to return per page (default is 10)
+ *       - in: query
+ *         name: offset
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Number of orders to skip before starting to collect the result (default is 0)
  *     responses:
  *       200:
  *         description: Order data retrieved successfully
@@ -119,7 +133,8 @@ orderROuter.post('/', authenticate, authorize('User'), orderController.addOrder)
  *       500:
  *         description: Internal server error
  */
-orderROuter.get('/:orderId', authenticate, authorize('User'), orderController.getOrderById);
+
+orderRouter.get('/', authenticate, authorize('admin', 'User'), orderController.getOrders);
 
 /**
  * @swagger
@@ -160,7 +175,7 @@ orderROuter.get('/:orderId', authenticate, authorize('User'), orderController.ge
  *       500:
  *         description: Internal server error
  */
-orderROuter.delete('/:orderId', authenticate, authorize('User'), orderController.cancelOrder);
+orderRouter.delete('/:orderId', authenticate, authorize('User'), orderController.cancelOrder);
 
 /**
  * @swagger
@@ -230,7 +245,7 @@ orderROuter.delete('/:orderId', authenticate, authorize('User'), orderController
  *                   example: "Internal server error."
  */
 
-orderROuter.post('/:orderId/upload-screenshot', authenticate, authorize('User'), orderController.uploadScreenShot);
+orderRouter.post('/:orderId/upload-screenshot', authenticate, authorize('User'), orderController.uploadScreenShot);
 
 /**
  * @swagger
@@ -300,6 +315,6 @@ orderROuter.post('/:orderId/upload-screenshot', authenticate, authorize('User'),
  *                   example: "Internal server error."
  */
 
-orderROuter.put('/:orderId/verify-payment', authenticate, authorize('admin'), orderController.verifyPayment);
+orderRouter.put('/:orderId/verify-payment', authenticate, authorize('admin'), orderController.verifyPayment);
 
-module.exports = orderROuter;
+module.exports = orderRouter;

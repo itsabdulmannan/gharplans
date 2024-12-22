@@ -20,15 +20,15 @@ const { authenticate, authorize } = require('../middleware/auth');
  *               name:
  *                 type: string
  *                 description: The name of the category.
- *                 example: "Electronics"
+ *                 example: "Agricultural"
  *               description:
  *                 type: string
  *                 description: A short description of the category.
- *                 example: "Gadgets and devices"
+ *                 example: "Products for farming and agriculture"
  *               image:
  *                 type: string
  *                 description: URL to the category image.
- *                 example: "https://example.com/electronics.jpg"
+ *                 example: "https://example.com/pesticide-category.jpg"
  *               status:
  *                 type: boolean
  *                 description: The status of the category (e.g., true for active, false for inactive).
@@ -55,13 +55,13 @@ const { authenticate, authorize } = require('../middleware/auth');
  *                       example: 1
  *                     name:
  *                       type: string
- *                       example: "Electronics"
+ *                       example: "Agricultural"
  *                     description:
  *                       type: string
- *                       example: "Gadgets and devices"
+ *                       example: "Products for farming and agriculture"
  *                     image:
  *                       type: string
- *                       example: "https://example.com/electronics.jpg"
+ *                       example: "https://example.com/pesticide-category.jpg"
  *                     status:
  *                       type: boolean
  *                       example: true
@@ -85,8 +85,8 @@ categoryRoute.post('/', authenticate, authorize('admin'), categoryController.add
  * @swagger
  * /category:
  *   get:
- *     summary: Retrieve categories by ID, name, or product name
- *     description: Fetch a category by its unique ID, search categories by name or associated product name, or fetch all categories if no filters are provided.
+ *     summary: Retrieve categories by ID, name, or product name with pagination support
+ *     description: Fetch a category by its unique ID, search categories by name or associated product name, or fetch all categories with pagination if no filters are provided.
  *     tags:
  *       - Category
  *     parameters:
@@ -103,17 +103,29 @@ categoryRoute.post('/', authenticate, authorize('admin'), categoryController.add
  *         description: The name or partial name of the category to search for.
  *         schema:
  *           type: string
- *           example: "Electronics"
  *       - in: query
  *         name: productName
  *         required: false
  *         description: The name or partial name of a product associated with the category to search for.
  *         schema:
  *           type: string
- *           example: "Smartphone"
+ *       - in: query
+ *         name: offset
+ *         required: false
+ *         description: The number of records to skip for pagination (default is 0).
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         description: The number of records to return for pagination (default is 10).
+ *         schema:
+ *           type: integer
+ *           default: 10
  *     responses:
  *       200:
- *         description: A single category's details, a list of matching categories, or all categories.
+ *         description: A single category's details, a list of matching categories, or all categories with pagination.
  *         content:
  *           application/json:
  *             schema:
@@ -122,52 +134,6 @@ categoryRoute.post('/', authenticate, authorize('admin'), categoryController.add
  *                 status:
  *                   type: boolean
  *                   example: true
- *                 category:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: integer
- *                       example: 1
- *                     name:
- *                       type: string
- *                       example: "Electronics"
- *                     description:
- *                       type: string
- *                       example: "Gadgets and devices"
- *                     image:
- *                       type: string
- *                       example: "http://localhost:3000/images/1732819064781-Screenshot 2024-05-18 142049.png"
- *                     status:
- *                       type: string
- *                       example: "active"
- *                     createdAt:
- *                       type: string
- *                       format: date-time
- *                       example: "2024-11-28T18:38:56.541Z"
- *                     updatedAt:
- *                       type: string
- *                       format: date-time
- *                       example: "2024-11-28T18:38:56.541Z"
- *                     Products:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           id:
- *                             type: integer
- *                             example: 1
- *                           name:
- *                             type: string
- *                             example: "Smartphone"
- *                           price:
- *                             type: number
- *                             example: 599.99
- *                           description:
- *                             type: string
- *                             example: "High-end smartphone with 128GB storage"
- *                           image:
- *                             type: string
- *                             example: "http://localhost:3000/images/product-1.png"
  *                 categories:
  *                   type: array
  *                   items:
@@ -178,24 +144,24 @@ categoryRoute.post('/', authenticate, authorize('admin'), categoryController.add
  *                         example: 1
  *                       name:
  *                         type: string
- *                         example: "Electronics"
+ *                         example: "Agricultural"
  *                       description:
  *                         type: string
- *                         example: "Gadgets and devices"
+ *                         example: "Products for farming and agriculture"
  *                       image:
  *                         type: string
- *                         example: "http://localhost:3000/images/1732819064781-Screenshot 2024-05-18 142049.png"
+ *                         example: "http://localhost:3000/images/pesticide-category.png"
  *                       status:
  *                         type: string
  *                         example: "active"
  *                       createdAt:
  *                         type: string
  *                         format: date-time
- *                         example: "2024-11-28T18:38:56.541Z"
+ *                         example: "2024-12-22T10:00:00.000Z"
  *                       updatedAt:
  *                         type: string
  *                         format: date-time
- *                         example: "2024-11-28T18:38:56.541Z"
+ *                         example: "2024-12-22T10:00:00.000Z"
  *                       Products:
  *                         type: array
  *                         items:
@@ -206,16 +172,31 @@ categoryRoute.post('/', authenticate, authorize('admin'), categoryController.add
  *                               example: 1
  *                             name:
  *                               type: string
- *                               example: "Smartphone"
+ *                               example: "Pesticide"
  *                             price:
  *                               type: number
- *                               example: 599.99
+ *                               example: 25.99
  *                             description:
  *                               type: string
- *                               example: "High-end smartphone with 128GB storage"
+ *                               example: "Eco-friendly pesticide for crops"
  *                             image:
  *                               type: string
- *                               example: "http://localhost:3000/images/product-1.png"
+ *                               example: "http://localhost:3000/images/pesticide-product.png"
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     totalRecords:
+ *                       type: integer
+ *                       example: 50
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 5
+ *                     currentPage:
+ *                       type: integer
+ *                       example: 1
+ *                     perPage:
+ *                       type: integer
+ *                       example: 10
  *       404:
  *         description: Category not found.
  *         content:

@@ -13,22 +13,42 @@ const { authenticate, authorize } = require('../middleware/auth');
  * @swagger
  * /cities:
  *   get:
- *     summary: Get all cities
+ *     summary: Get all cities with pagination
  *     tags: [Cities]
+ *     parameters:
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: The number of records to skip.
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: The number of records to retrieve.
  *     responses:
  *       200:
- *         description: A list of cities
+ *         description: A paginated list of cities
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                   name:
- *                     type: string
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       name:
+ *                         type: string
  *       500:
  *         description: Server error
  *         content:
@@ -36,9 +56,14 @@ const { authenticate, authorize } = require('../middleware/auth');
  *             schema:
  *               type: object
  *               properties:
+ *                 status:
+ *                   type: boolean
  *                 message:
  *                   type: string
+ *                 error:
+ *                   type: string
  */
+
 citiesRouter.get('/', authenticate, authorize('admin', 'User'), citiesController.getCities);
 /**
  * @swagger

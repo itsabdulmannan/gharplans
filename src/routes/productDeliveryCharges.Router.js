@@ -22,6 +22,20 @@ const { authenticate, authorize } = require('../middleware/auth');
  *         required: false
  *         schema:
  *           type: integer
+ *       - name: offset
+ *         in: query
+ *         description: The number of records to skip (default is 0)
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *       - name: limit
+ *         in: query
+ *         description: The number of records to retrieve (default is 10)
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 10
  *     responses:
  *       200:
  *         description: List of product delivery charges or a specific one
@@ -29,17 +43,31 @@ const { authenticate, authorize } = require('../middleware/auth');
  *           application/json:
  *             schema:
  *               oneOf:
- *                 - type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: integer
- *                       charge:
- *                         type: number
- *                         format: float
- *                       productId:
- *                         type: integer
+ *                 - type: object
+ *                   properties:
+ *                     status:
+ *                       type: boolean
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           charge:
+ *                             type: number
+ *                             format: float
+ *                           productId:
+ *                             type: integer
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         totalRecords:
+ *                           type: integer
+ *                         currentPage:
+ *                           type: integer
+ *                         totalPages:
+ *                           type: integer
  *                 - type: object
  *                   properties:
  *                     id:

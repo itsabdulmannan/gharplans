@@ -4,7 +4,13 @@ const { Sequelize } = require('sequelize');
 const citiesController = {
     getCities: async (req, res) => {
         try {
-            const citiesList = await cities.findAll();
+            const { offset = 0, limit = 10 } = req.query;
+            const citiesList = await cities.findAll(
+                {
+                    offset: parseInt(offset) || 0,
+                    limit: parseInt(limit) || 10
+                }
+            );
             res.status(200).json(citiesList);
         } catch (error) {
             console.error("Error getting cities:", error);
