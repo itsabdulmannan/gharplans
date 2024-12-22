@@ -22,22 +22,39 @@ const utmController = {
     },
     getUtm: async (req, res) => {
         try {
-            const { id, source, couponCode, offset = 0, limit = 10 } = req.query;
+            const { medium, campaign } = req.query;
             const whereCondition = {};
 
-            if (id) whereCondition.id = id;
-            if (source) whereCondition.source = source;
-            if (couponCode) whereCondition.couponCode = couponCode;
+            if (medium) whereCondition.medium = medium;
+            if (campaign) whereCondition.campaign = campaign;
 
             const utmLinks = await utm.findAll({
                 where: whereCondition,
-                offset: parseInt(offset) || 0,
-                limit: parseInt(limit) || 10
             });
-            res.status(200).json({ status: true, message: "Success", data: utmLinks });
+
+            if (req.trafficError) {
+                return res.status(500).json({ status: false, message: "Error tracking traffic, no data available" });
+            }
+
+            if (utmLinks.length === 0) {
+                return res.status(404).json({ status: false, message: "No UTM links found" });
+            }
+
+            const responseData = {
+                status: true,
+                message: "Success",
+                data: utmLinks
+            };
+
+            if (req.updatedUtmLink) {
+                responseData.message = "Traffic incremented successfully";
+                responseData.data = req.updatedUtmLink;  
+            }
+
+            res.status(200).json(responseData);
         } catch (error) {
-            console.error("Error while getting the link");
-            req.status(500).json({ status: false, message: "Internal Server Error" });
+            console.error("Error while getting the link:", error);
+            res.status(500).json({ status: false, message: "Internal Server Error" });
         }
     }
 }

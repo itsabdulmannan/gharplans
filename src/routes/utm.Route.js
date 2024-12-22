@@ -1,5 +1,6 @@
 const utmRouter = require('express').Router();
 const utmController = require('../controllers/utm.Controller');
+const trackTraffic = require('../middleware/trackTraffic');
 
 /**
    * @swagger
@@ -46,44 +47,32 @@ utmRouter.post('/create', utmController.createUtm);
 
 /**
     * @swagger
-    * /utm:
+    * /utm/:
     *   get:
     *     summary: Retrieve UTM links.
-    *     description: Fetch UTM links based on query parameters, with optional pagination.
+    *     description: Fetch UTM links based on query parameters, with optional pagination. This endpoint also tracks traffic based on the `medium` and `campaign` query parameters.
     *     tags:
     *       - UTM Links
     *     parameters:
     *       - in: query
-    *         name: id
-    *         schema:
-    *           type: integer
-    *         description: Filter by UTM ID.
-    *       - in: query
-    *         name: source
+    *         name: medium
     *         schema:
     *           type: string
-    *         description: Filter by traffic source (e.g., facebook, instagram).
+    *         description: The marketing medium (e.g., social, email, influencer).
+    *         required: true
     *       - in: query
-    *         name: couponCode
+    *         name: campaign
     *         schema:
     *           type: string
-    *         description: Filter by coupon code.
-    *       - in: query
-    *         name: offset
-    *         schema:
-    *           type: integer
-    *         description: The offset for pagination (default is 0).
-    *       - in: query
-    *         name: limit
-    *         schema:
-    *           type: integer
-    *         description: The number of records to retrieve (default is 10).
+    *         description: The name of the campaign (e.g., holiday_sale).
+    *         required: true
     *     responses:
     *       200:
     *         description: Successfully retrieved UTM links.
     *       500:
     *         description: Internal server error.
     */
-utmRouter.get('/', utmController.getUtm);
+
+utmRouter.get('/', trackTraffic, utmController.getUtm);
 
 module.exports = utmRouter;
