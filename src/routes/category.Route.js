@@ -30,9 +30,9 @@ const { authenticate, authorize } = require('../middleware/auth');
  *                 description: URL to the category image.
  *                 example: "https://example.com/electronics.jpg"
  *               status:
- *                 type: string
- *                 description: The status of the category (e.g., active, inactive).
- *                 example: "active"
+ *                 type: boolean
+ *                 description: The status of the category (e.g., true for active, false for inactive).
+ *                 example: true
  *     responses:
  *       201:
  *         description: Category added successfully
@@ -63,8 +63,8 @@ const { authenticate, authorize } = require('../middleware/auth');
  *                       type: string
  *                       example: "https://example.com/electronics.jpg"
  *                     status:
- *                       type: string
- *                       example: "active"
+ *                       type: boolean
+ *                       example: true
  *       500:
  *         description: Internal Server Error
  *         content:
@@ -79,6 +79,7 @@ const { authenticate, authorize } = require('../middleware/auth');
  *                   type: string
  *                   example: "Internal Server Error"
  */
+
 categoryRoute.post('/', authenticate, authorize('admin'), categoryController.addCategory);
 /**
  * @swagger
