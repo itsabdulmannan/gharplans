@@ -24,7 +24,7 @@ const Order = sequelize.define('order', {
         allowNull: false
     },
     paymentType: {
-        type: DataTypes.ENUM('cod', 'card'),
+        type: DataTypes.ENUM('card'),
         allowNull: false
     },
     status: {
