@@ -574,7 +574,7 @@ prodcustRoute.post('/change-order', authenticate, authorize('admin'), productCon
  *                       type: number
  *                       format: float
  *                       description: The discount percentage for this tier.
- *                       example: 15.0
+ *                       example: "15%"
  *     responses:
  *       200:
  *         description: Discount tiers added successfully.

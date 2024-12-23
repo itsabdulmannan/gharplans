@@ -11,7 +11,7 @@ const utmController = {
                 couponCode   //A unique coupon or promotional code associated with the campaign.
             } = req.body;
             // const utmUrl = `${baseUrl}?utm_source=${source}&utm_medium=${medium}&utm_campaign=${campaign}`;
-            const utmUrl = `${baseUrl}?utm_source=${encodeURIComponent(source)}&utm_medium=${encodeURIComponent(medium)}&utm_campaign=${encodeURIComponent(campaign)}${couponCode ? `&couponCode=${encodeURIComponent(couponCode)}` : ''}`;
+            const utmUrl = `${baseUrl}?utm_source=${encodeURIComponent(source)}&utm_medium=${encodeURIComponent(medium)}&utm_campaign=${encodeURIComponent(campaign)}`;
 
             const newUtm = await utm.create({ baseUrl, source, medium, campaign, utmUrl, couponCode })
             res.status(201).json({ status: true, message: "Link Generated Successfully", data: newUtm });
@@ -48,7 +48,7 @@ const utmController = {
 
             if (req.updatedUtmLink) {
                 responseData.message = "Traffic incremented successfully";
-                responseData.data = req.updatedUtmLink;  
+                responseData.data = req.updatedUtmLink;
             }
 
             res.status(200).json(responseData);

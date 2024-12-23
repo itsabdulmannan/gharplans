@@ -66,7 +66,7 @@ async function generatePdf(data) {
         await page.setContent(htmlContent, { waitUntil: 'domcontentloaded' });
 
         const filePath = `/quotation_${Date.now()}.pdf`;
-        const fullPath = path.resolve(`./src/public/pdf/${filePath}`);
+        const fullPath = path.resolve(`'../../public/pdf/${filePath}`);
 
         const dir = path.dirname(fullPath);
         if (!fs.existsSync(dir)) {
