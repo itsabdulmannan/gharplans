@@ -1,21 +1,14 @@
 const { Sequelize } = require('sequelize');
 
-// const sequelize = new Sequelize({
-//     username: process.env.DB_USERNAME,
-//     password: process.env.DB_PASSWORD,
-//     database: process.env.DB_DATABASE,
-//     host: process.env.DB_HOST,
-//     port: process.env.DB_PORT,
-//     dialect: process.env.DB_DIALECT,
-//     logging: false,
-//     timezone: '+00:00',  // UTC
-// });
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
-    dialect: 'postgres', // Specify the database dialect
-    ssl: {
-        require: true,
-        rejectUnauthorized: false, // This is needed for SSL connections in production
-    },
+const sequelize = new Sequelize({
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    dialect: process.env.DB_DIALECT,
+    logging: false,
+    timezone: '+00:00',  // UTC
 });
 
 sequelize.authenticate()
