@@ -10,10 +10,11 @@ const { Sequelize } = require('sequelize');
 //     logging: false,
 //     timezone: '+00:00',  // UTC
 // });
-const sequelize = new Sequelize({
-    connectionString: process.env.DATABASE_URL,
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'postgres', // Specify the database dialect
     ssl: {
-        rejectUnauthorized: false,
+        require: true,
+        rejectUnauthorized: false, // This is needed for SSL connections in production
     },
 });
 
